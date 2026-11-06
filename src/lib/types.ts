@@ -5,6 +5,7 @@
 
 export type CategoriaVenta =
   | "LUNAS"
+  | "LENTE_COMPLETO"
   | "ARMAZONES"
   | "LENTES_CONTACTO"
   | "ACCESORIOS"

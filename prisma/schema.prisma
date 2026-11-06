@@ -62,6 +62,7 @@ model Paciente {
 
 enum CategoriaVenta {
   LUNAS
+  LENTE_COMPLETO
   ARMAZONES
   LENTES_CONTACTO
   ACCESORIOS

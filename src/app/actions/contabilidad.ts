@@ -13,7 +13,14 @@ import type {
   MetodoPago,
 } from "@/lib/types";
 
-const CATEGORIAS_VENTA = ["LUNAS", "ARMAZONES", "LENTES_CONTACTO", "ACCESORIOS", "CONSULTA"];
+const CATEGORIAS_VENTA = [
+  "LUNAS",
+  "LENTE_COMPLETO",
+  "ARMAZONES",
+  "LENTES_CONTACTO",
+  "ACCESORIOS",
+  "CONSULTA",
+];
 const CATEGORIAS_COMPRA = [
   "ARMAZONES",
   "LUNAS_LABORATORIO",

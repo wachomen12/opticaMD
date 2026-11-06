@@ -9,6 +9,7 @@ import type {
 
 export const CATEGORIA_VENTA_LABEL: Record<CategoriaVenta, string> = {
   LUNAS: "Lunas / Cristales",
+  LENTE_COMPLETO: "Lente completo",
   ARMAZONES: "Armazones",
   LENTES_CONTACTO: "Lentes de contacto",
   ACCESORIOS: "Líquidos y accesorios",
@@ -81,6 +82,7 @@ export const ESTADO_ENTREGA_STYLE: Record<EstadoEntrega, string> = {
 
 export const CATEGORIA_VENTA_DOT: Record<CategoriaVenta, string> = {
   LUNAS: "#235D92",
+  LENTE_COMPLETO: "#DB2777",
   ARMAZONES: "#EA711B",
   LENTES_CONTACTO: "#0F9D76",
   ACCESORIOS: "#7C5CD6",
