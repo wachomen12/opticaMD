@@ -111,10 +111,10 @@ npm install
 
 2. Copia `.env.example` a `.env` y completa `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` y `ADMIN_NAME`.
 
-3. Crea el esquema en PostgreSQL y el usuario administrador:
+3. Aplica las migraciones y crea el usuario administrador:
 
 ```bash
-npm run db:push
+npm run db:deploy
 npm run db:admin
 ```
 
@@ -150,32 +150,49 @@ ADMIN_NAME="Administrador"
 AUTH_SECRET="una-cadena-larga-aleatoria-de-al-menos-32-caracteres"
 ```
 
-3. Genera el esquema y crea el usuario administrador:
+3. Aplica las migraciones y crea el usuario administrador:
 
 ```bash
-npm run db:push
+npm run db:deploy
 npm run db:admin
 npm run dev
 ```
 
 `npm run db:admin` crea o actualiza el usuario indicado en `ADMIN_EMAIL` con la contraseña de `ADMIN_PASSWORD`, almacenada como hash scrypt en la tabla `usuarios`. Puedes ejecutarlo de nuevo cuando necesites restablecer la contraseña.
 
+### Migraciones de Prisma
+
+El proyecto incluye una migración inicial en `prisma/migrations/20261106000000_init`. Para aplicarla en una base nueva o en producción:
+
+```bash
+npm run db:deploy
+npm run db:status
+```
+
+Cuando modifiques `prisma/schema.prisma` en desarrollo, crea una nueva migración con:
+
+```bash
+npm run db:migrate -- --name descripcion_del_cambio
+```
+
+Evita mezclar `db:push` con migraciones sobre la misma base: para aplicar el historial usa `db:deploy`.
+
 ### Alternativa: ejecutar el SQL directamente
 
-El archivo [`supabase/schema.sql`](supabase/schema.sql) contiene el DDL completo (tipos enum, tablas, índices y llaves foráneas) generado desde Prisma. Puedes pegarlo en el **SQL Editor** de Supabase si prefieres no usar `prisma db push`.
+El archivo [`supabase/schema.sql`](supabase/schema.sql) contiene el DDL completo (tipos enum, tablas, índices y llaves foráneas) generado desde Prisma. Puedes pegarlo en el **SQL Editor** de Supabase si prefieres no usar las migraciones.
 
 Después de crear las tablas, ejecuta `npm run db:admin` para registrar el usuario administrador en `usuarios`.
 
 ### Solución de problemas de conexión (Neon)
 
-- `DATABASE_URL` es la que usa la aplicación en tiempo de ejecución; `DIRECT_URL` solo la utiliza Prisma CLI (`db push`, `db:admin`).
+- `DATABASE_URL` es la que usa la aplicación en tiempo de ejecución; `DIRECT_URL` solo la utiliza Prisma CLI (`migrate`, `db:admin`).
 - En Neon, usa la cadena **Pooled** para `DATABASE_URL` (host con `-pooler`) y la **Direct** para `DIRECT_URL` (sin `-pooler`). Ambas con `?sslmode=require`.
 - Si la contraseña contiene `@`, `#`, `%`, `/` o `:`, codifícala en la URL (`@` → `%40`, `#` → `%23`, `%` → `%25`, `/` → `%2F`, `:` → `%3A`).
 - Después de crear o modificar `.env`, reinicia `npm run dev`: Next.js solo lee el archivo al arrancar.
 - En Vercel, el archivo `.env` no se sube. Define las variables en **Settings → Environment Variables** y vuelve a desplegar.
-- Si Neon estuvo suspendido, la primera conexión puede tardar; añade `connect_timeout=15` a la URL.
+- Si Neon estuvo suspendido, la primera conexión puede tardar; añade `connect_timeout=30` a la URL.
 - Ejecuta `npm run db:check` para comprobar la conexión, las tablas y los usuarios registrados.
-- Si falta la tabla `usuarios`, ejecuta `npx prisma db push`. Si la tabla existe pero está vacía, ejecuta `npm run db:admin`.
+- Si falta alguna tabla, ejecuta `npm run db:deploy`. Si la tabla `usuarios` existe pero está vacía, ejecuta `npm run db:admin`.
 
 ---
 
@@ -192,10 +209,10 @@ Después de crear las tablas, ejecuta `npm run db:admin` para registrar el usuar
    - `AUTH_SECRET` (cadena aleatoria de al menos 32 caracteres; por ejemplo `openssl rand -base64 48`)
    - `NEXT_PUBLIC_APP_NAME`
    - `NEXT_PUBLIC_APP_URL` (tu dominio público, p. ej. `https://optica-md.vercel.app`)
-4. Ejecuta el esquema y crea el administrador contra la base de producción (una sola vez):
+4. Aplica las migraciones y crea el administrador contra la base de producción (una sola vez):
 
 ```bash
-npx prisma db push
+npm run db:deploy
 npm run db:admin
 ```
 
@@ -215,7 +232,10 @@ npm run db:admin
 | `npm run build` | `prisma generate` + build de producción |
 | `npm start` | Servidor de producción |
 | `npm run lint` | Linter de Next.js |
-| `npm run db:push` | Sincroniza `schema.prisma` con PostgreSQL |
+| `npm run db:push` | Sincroniza el esquema sin crear historial de migraciones |
+| `npm run db:migrate` | Crea y aplica una migración en desarrollo |
+| `npm run db:deploy` | Aplica las migraciones pendientes (producción) |
+| `npm run db:status` | Muestra el estado de las migraciones |
 | `npm run db:admin` | Crea o actualiza el usuario administrador en `usuarios` |
 | `npm run db:check` | Verifica conexión, tablas y usuarios registrados |
 | `npm run db:studio` | Abre Prisma Studio |
@@ -228,6 +248,7 @@ npm run db:admin
 prisma/
   schema.prisma          # Modelos y enums (Usuario, Paciente, HistoriaClinica, Venta, PagoVenta, Compra, Gasto)
   bootstrap.ts           # Crea/actualiza el usuario administrador (db:admin)
+  migrations/            # Historial de migraciones (migrate deploy)
 supabase/
   schema.sql             # DDL listo para el SQL Editor de Supabase
 src/
