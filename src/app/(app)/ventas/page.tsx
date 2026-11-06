@@ -92,7 +92,7 @@ export default async function VentasPage({
     if (!q) return true;
     const paciente = venta.pacienteId ? pacientes.get(venta.pacienteId) : undefined;
     const cliente = paciente
-      ? `${paciente.nombres} ${paciente.apellidos} ${paciente.cedula}`
+      ? `${paciente.nombres} ${paciente.apellidos} ${paciente.cedula ?? ""}`
       : venta.clienteNombre ?? "";
     return (
       venta.codigo.toLowerCase().includes(q) ||
@@ -241,7 +241,7 @@ export default async function VentasPage({
                           <p className="max-w-[150px] truncate text-[12.5px] font-medium text-ink">
                             {cliente}
                           </p>
-                          {paciente && (
+                          {paciente?.cedula && (
                             <p className="text-[10px] text-ink-subtle">{paciente.cedula}</p>
                           )}
                         </TableCell>

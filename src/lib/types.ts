@@ -32,7 +32,7 @@ export type EstadoEntrega = "EN_TALLER" | "LISTO" | "ENTREGADO";
 
 export interface Paciente {
   id: string;
-  cedula: string;
+  cedula?: string | null;
   nombres: string;
   apellidos: string;
   fechaNacimiento?: string | null;

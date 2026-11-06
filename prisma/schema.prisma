@@ -34,7 +34,7 @@ model Usuario {
 
 model Paciente {
   id              String    @id @default(cuid())
-  cedula          String    @unique // Cédula / RUC / Pasaporte
+  cedula          String?   @unique // Cédula / RUC / Pasaporte (opcional)
   nombres         String
   apellidos       String
   fechaNacimiento DateTime?

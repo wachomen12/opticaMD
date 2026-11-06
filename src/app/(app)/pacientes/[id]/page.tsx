@@ -152,7 +152,7 @@ export default async function PacienteDetallePage({
                   {paciente.nombres} {paciente.apellidos}
                 </h1>
                 <p className="mt-0.5 text-[11.5px] text-ink-muted">
-                  CI / RUC {paciente.cedula}
+                  {paciente.cedula ? `CI / RUC ${paciente.cedula}` : "Sin cédula registrada"}
                   {paciente.edad ? ` · ${paciente.edad} años` : ""}
                   {paciente.ocupacion ? ` · ${paciente.ocupacion}` : ""}
                 </p>

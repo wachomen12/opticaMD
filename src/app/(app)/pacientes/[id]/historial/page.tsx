@@ -109,7 +109,7 @@ export default async function HistorialPage({
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-ink-muted">
           <span className="flex items-center gap-1.5">
             <IdCard className="h-3.5 w-3.5 text-primary/70" />
-            CI {paciente.cedula}
+            {paciente.cedula ? `CI ${paciente.cedula}` : "Sin cédula"}
           </span>
           {paciente.edad && (
             <span className="flex items-center gap-1.5">

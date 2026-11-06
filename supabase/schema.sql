@@ -35,7 +35,7 @@ CREATE TABLE "usuarios" (
 -- CreateTable
 CREATE TABLE "pacientes" (
     "id" TEXT NOT NULL,
-    "cedula" TEXT NOT NULL,
+    "cedula" TEXT,
     "nombres" TEXT NOT NULL,
     "apellidos" TEXT NOT NULL,
     "fechaNacimiento" TIMESTAMP(3),

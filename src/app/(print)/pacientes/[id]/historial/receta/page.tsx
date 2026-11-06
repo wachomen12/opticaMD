@@ -113,9 +113,11 @@ export default async function RecetaPage({
                   {paciente.nombres} {paciente.apellidos}
                 </p>
               </div>
-              <p className="text-[10.5px] text-ink-muted">
-                CI / RUC <span className="font-semibold text-ink">{paciente.cedula}</span>
-              </p>
+              {paciente.cedula && (
+                <p className="text-[10.5px] text-ink-muted">
+                  CI / RUC <span className="font-semibold text-ink">{paciente.cedula}</span>
+                </p>
+              )}
             </div>
             <div className="mt-3 grid gap-x-6 gap-y-1.5 text-[10.5px] text-ink-muted sm:grid-cols-2">
               <p>

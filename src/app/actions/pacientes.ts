@@ -22,7 +22,7 @@ function leerPaciente(formData: FormData) {
   const fechaNacimiento = fechaRaw ? parseDateInput(fechaRaw) : null;
   const edadManual = getNumber(formData, "edad");
   return {
-    cedula: getString(formData, "cedula"),
+    cedula: getOptional(formData, "cedula"),
     nombres: getString(formData, "nombres"),
     apellidos: getString(formData, "apellidos"),
     fechaNacimiento,
@@ -38,8 +38,7 @@ function leerPaciente(formData: FormData) {
 
 function validar(data: ReturnType<typeof leerPaciente>) {
   const errors: Record<string, string> = {};
-  if (!data.cedula) errors.cedula = "La cédula o RUC es obligatoria";
-  else if (!/^[0-9A-Za-z-]{5,20}$/.test(data.cedula))
+  if (data.cedula && !/^[0-9A-Za-z-]{5,20}$/.test(data.cedula))
     errors.cedula = "Ingresa una cédula o RUC válido";
   if (!data.nombres) errors.nombres = "Ingresa los nombres";
   if (!data.apellidos) errors.apellidos = "Ingresa los apellidos";
@@ -62,13 +61,15 @@ export async function crearPaciente(
   }
 
   try {
-    const existe = await prisma.paciente.findUnique({ where: { cedula: data.cedula } });
-    if (existe) {
-      return {
-        ok: false,
-        message: "Ya existe un paciente con esa cédula",
-        errors: { cedula: "Cédula registrada previamente" },
-      };
+    if (data.cedula) {
+      const existe = await prisma.paciente.findUnique({ where: { cedula: data.cedula } });
+      if (existe) {
+        return {
+          ok: false,
+          message: "Ya existe un paciente con esa cédula",
+          errors: { cedula: "Cédula registrada previamente" },
+        };
+      }
     }
     await prisma.paciente.create({
       data: {
@@ -116,15 +117,17 @@ export async function actualizarPaciente(
   }
 
   try {
-    const duplicado = await prisma.paciente.findFirst({
-      where: { cedula: data.cedula, NOT: { id } },
-    });
-    if (duplicado) {
-      return {
-        ok: false,
-        message: "Ya existe un paciente con esa cédula",
-        errors: { cedula: "Cédula registrada previamente" },
-      };
+    if (data.cedula) {
+      const duplicado = await prisma.paciente.findFirst({
+        where: { cedula: data.cedula, NOT: { id } },
+      });
+      if (duplicado) {
+        return {
+          ok: false,
+          message: "Ya existe un paciente con esa cédula",
+          errors: { cedula: "Cédula registrada previamente" },
+        };
+      }
     }
     await prisma.paciente.update({
       where: { id },

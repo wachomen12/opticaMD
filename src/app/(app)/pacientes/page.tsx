@@ -67,7 +67,7 @@ export default async function PacientesPage({
     if (!q) return true;
     return (
       `${paciente.nombres} ${paciente.apellidos}`.toLowerCase().includes(q) ||
-      paciente.cedula.toLowerCase().includes(q) ||
+      (paciente.cedula ?? "").toLowerCase().includes(q) ||
       paciente.telefono.toLowerCase().includes(q) ||
       (paciente.email ?? "").toLowerCase().includes(q)
     );
@@ -226,7 +226,7 @@ export default async function PacientesPage({
                                 )}
                               </div>
                               <p className="text-[10px] text-ink-subtle">
-                                CI {paciente.cedula}
+                                {paciente.cedula ? `CI ${paciente.cedula}` : "Sin cédula"}
                                 {paciente.edad ? ` · ${paciente.edad} años` : ""}
                               </p>
                             </div>

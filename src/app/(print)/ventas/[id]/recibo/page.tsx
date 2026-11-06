@@ -88,7 +88,7 @@ export default async function ReciboPage({
                 </p>
                 <p className="font-display text-[15px] font-bold text-ink">{nombre}</p>
               </div>
-              {paciente && (
+              {paciente?.cedula && (
                 <p className="text-[10px] text-ink-muted">
                   CI / RUC <span className="font-semibold text-ink">{paciente.cedula}</span>
                 </p>

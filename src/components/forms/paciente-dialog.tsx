@@ -51,14 +51,13 @@ function PacienteForm({
 
         <FormSection title="Identificación">
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Cédula / RUC" htmlFor="cedula" required error={state.errors?.cedula}>
+            <Field label="Cédula / RUC" htmlFor="cedula" hint="Opcional" error={state.errors?.cedula}>
               <Input
                 id="cedula"
                 name="cedula"
                 defaultValue={paciente?.cedula ?? ""}
                 placeholder="1712345678"
                 autoComplete="off"
-                required
               />
             </Field>
             <Field label="Ocupación" htmlFor="ocupacion">

@@ -477,7 +477,7 @@ export function HistorialWizard({
                 <div>
                   <p className="label-overline">Identificación (CI / RUC)</p>
                   <p className="mt-0.5 font-mono text-[12.5px] font-medium text-ink">
-                    {paciente.cedula}
+                    {paciente.cedula ?? "—"}
                   </p>
                 </div>
                 <div>
