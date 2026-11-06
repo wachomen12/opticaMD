@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+    --sidebar-w: 248px;
+    --sidebar-w-collapsed: 72px;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-canvas text-ink antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    @apply bg-primary/15 text-secondary-950;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight text-ink;
+  }
+
+  /* Números alineados al milímetro en tablas contables y recetas OD/OI */
+  table,
+  input[type="number"],
+  .tabular-data {
+    font-variant-numeric: tabular-nums;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0.65;
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  /* Tarjeta clínica/ejecutiva de borde definido y radio contenido */
+  .surface-card {
+    @apply rounded-lg border border-slate-200/95 bg-white shadow-xs;
+  }
+
+  /* Encabezados técnicos de sección y columnas */
+  .label-overline {
+    @apply font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-subtle;
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-1 focus-visible:ring-offset-white;
+  }
+
+  /* Textura micro-óptica discreta para cabeceras oscuras */
+  .grid-pattern {
+    background-image: radial-gradient(
+      rgba(255, 255, 255, 0.07) 1px,
+      transparent 1px
+    );
+    background-size: 16px 16px;
+  }
+
+  /* Celdas técnicas para prescripción optométrica (Esfera, Cilindro, Eje, DNP) */
+  .rx-input {
+    @apply font-mono text-sm font-medium tabular-nums tracking-tight;
+  }
+
+  .scrollbar-slim {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, 0.35) transparent;
+  }
+
+  .scrollbar-slim::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  .scrollbar-slim::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.35);
+    border-radius: 4px;
+  }
+
+  .scrollbar-slim::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .table-row-hover {
+    @apply transition-colors duration-100 hover:bg-primary-50/45;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-delay-100 {
+    animation-delay: 60ms;
+  }
+
+  .animate-delay-200 {
+    animation-delay: 120ms;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: #0b1324 !important;
+  }
+
+  main {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  .print-full {
+    box-shadow: none !important;
+    border-color: #cbd5e1 !important;
+    break-inside: avoid;
+  }
+}

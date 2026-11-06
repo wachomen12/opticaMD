@@ -1,0 +1,245 @@
+// Prisma schema — ÓPTICA MD
+// Base de datos: PostgreSQL (Supabase / Neon)
+// Ejecutar: npx prisma db push && npm run db:seed
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────
+//  CLÍNICA
+// ─────────────────────────────────────────────
+
+model Paciente {
+  id              String    @id @default(cuid())
+  cedula          String    @unique // Cédula / RUC / Pasaporte
+  nombres         String
+  apellidos       String
+  fechaNacimiento DateTime?
+  edad            Int?
+  genero          String? // Masculino / Femenino / Otro
+  telefono        String // Teléfono / WhatsApp
+  email           String?
+  direccion       String?
+  ocupacion       String?
+  notas           String?
+  activo          Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  ventas    Venta[]
+  historias HistoriaClinica[]
+
+  @@index([apellidos, nombres])
+  @@map("pacientes")
+}
+
+// ─────────────────────────────────────────────
+//  CONTABILIDAD — INGRESOS
+// ─────────────────────────────────────────────
+
+enum CategoriaVenta {
+  LUNAS
+  ARMAZONES
+  LENTES_CONTACTO
+  ACCESORIOS
+  CONSULTA
+}
+
+enum MetodoPago {
+  EFECTIVO
+  TRANSFERENCIA
+  TARJETA
+}
+
+enum EstadoPago {
+  PENDIENTE
+  PARCIAL
+  PAGADA
+}
+
+enum EstadoEntrega {
+  EN_TALLER
+  LISTO
+  ENTREGADO
+}
+
+model Venta {
+  id            String         @id @default(cuid())
+  codigo        String         @unique // V-2026-0001
+  fecha         DateTime       @default(now())
+  categoria     CategoriaVenta
+  descripcion   String
+  total         Decimal        @db.Decimal(10, 2)
+  metodoPago    MetodoPago     @default(EFECTIVO)
+  estadoPago    EstadoPago     @default(PENDIENTE)
+  estadoEntrega EstadoEntrega  @default(ENTREGADO)
+  pacienteId    String?
+  paciente      Paciente?      @relation(fields: [pacienteId], references: [id], onDelete: SetNull)
+  clienteNombre String? // Venta rápida sin ficha de paciente
+  notas         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  pagos    PagoVenta[]
+  historia HistoriaClinica?
+
+  @@index([fecha])
+  @@index([estadoPago])
+  @@map("ventas")
+}
+
+// ─────────────────────────────────────────────
+//  HISTORIA CLÍNICA OPTOMÉTRICA
+// ─────────────────────────────────────────────
+
+model HistoriaClinica {
+  id             String   @id @default(cuid())
+  numeroHistoria String   @unique // HC-0001
+  fecha          DateTime @default(now())
+
+  // Control y filiación clínica (los datos personales viven en Paciente)
+  usaLentes           Boolean @default(false)
+  ultimoControlVisual String?
+  ultimoCambioLentes  String?
+
+  // Motivo de consulta
+  motivosConsulta     String[] @default([])
+  motivoConsultaOtros String?
+
+  // Antecedentes
+  antecedentesPatologicos         String[] @default([])
+  antecedentesPatologicosOtros    String?
+  antecedentesOftalmologicos      String[] @default([])
+  antecedentesOftalmologicosOtros String?
+  antecedentesFamiliares          String[] @default([])
+  antecedentesFamiliaresOtros     String?
+
+  // Examen optométrico — A. Agudeza visual
+  avSinCorreccionVL_OD String?
+  avSinCorreccionVL_OI String?
+  avSinCorreccionVP_OD String?
+  avSinCorreccionVP_OI String?
+  avConCorreccionVL_OD String?
+  avConCorreccionVL_OI String?
+  avConCorreccionVP_OD String?
+  avConCorreccionVP_OI String?
+
+  // Examen optométrico — H. Segmento posterior
+  papilaOptica                   String?
+  macula                         String?
+  retina                         String?
+  observacionesSegmentoPosterior String?
+
+  // Diagnóstico optométrico
+  diagnosticos    String[] @default([])
+  diagnosticoOtro String?
+
+  // Prescripción optométrica (RX final)
+  esfera_OD   String?
+  esfera_OI   String?
+  cilindro_OD String?
+  cilindro_OI String?
+  eje_OD      String?
+  eje_OI      String?
+  adicion_OD  String?
+  adicion_OI  String?
+  altura_OD   String?
+  altura_OI   String?
+  dnp_OD      String?
+  dnp_OI      String?
+  avFinal_OD  String?
+  avFinal_OI  String?
+
+  tipoLenteRecomendado     String[] @default([])
+  tipoLenteOtro            String?
+  tratamientosRecomendados String[] @default([])
+  tratamientoOtro          String?
+
+  pacienteId String
+  paciente   Paciente @relation(fields: [pacienteId], references: [id], onDelete: Cascade)
+
+  ventaId String? @unique
+  venta   Venta?  @relation(fields: [ventaId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([pacienteId, fecha])
+  @@index([fecha])
+  @@map("historias_clinicas")
+}
+
+model PagoVenta {
+  id        String     @id @default(cuid())
+  ventaId   String
+  venta     Venta      @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+  monto     Decimal    @db.Decimal(10, 2)
+  metodo    MetodoPago @default(EFECTIVO)
+  fecha     DateTime   @default(now())
+  nota      String?
+  createdAt DateTime   @default(now())
+
+  @@index([ventaId])
+  @@index([fecha])
+  @@map("pagos_venta")
+}
+
+// ─────────────────────────────────────────────
+//  CONTABILIDAD — EGRESOS
+// ─────────────────────────────────────────────
+
+enum CategoriaCompra {
+  ARMAZONES
+  LUNAS_LABORATORIO
+  LENTES_CONTACTO
+  INSUMOS
+  EQUIPOS
+  OTROS
+}
+
+model Compra {
+  id                String          @id @default(cuid())
+  fecha             DateTime        @default(now())
+  proveedor         String
+  proveedorRuc      String?
+  numeroComprobante String?
+  categoria         CategoriaCompra @default(ARMAZONES)
+  descripcion       String
+  total             Decimal         @db.Decimal(10, 2)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([fecha])
+  @@map("compras")
+}
+
+enum CategoriaGasto {
+  ARRIENDO
+  SERVICIOS
+  SUELDOS
+  MANTENIMIENTO
+  PUBLICIDAD
+  OTROS
+}
+
+model Gasto {
+  id          String         @id @default(cuid())
+  fecha       DateTime       @default(now())
+  categoria   CategoriaGasto @default(OTROS)
+  descripcion String
+  monto       Decimal        @db.Decimal(10, 2)
+  recurrente  Boolean        @default(false)
+  comprobante String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([fecha])
+  @@map("gastos")
+}
