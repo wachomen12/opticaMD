@@ -18,6 +18,7 @@ import {
   Phone,
   Receipt,
   Stethoscope,
+  Trash2,
   UserRound,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +37,7 @@ import {
 } from "@/components/ui/table";
 import { BrandMark } from "@/components/brand/logo";
 import { PacienteDialog } from "@/components/forms/paciente-dialog";
+import { EliminarPacienteButton } from "@/components/forms/eliminar-paciente";
 import { VentaDialog } from "@/components/forms/venta-dialog";
 import { PagoDialog } from "@/components/forms/pago-dialog";
 import { EntregaControl } from "@/components/forms/entrega-control";
@@ -162,6 +164,21 @@ export default async function PacienteDetallePage({
                 trigger={
                   <Button variant="outline" size="icon" title="Editar paciente">
                     <Pencil className="h-4 w-4" />
+                  </Button>
+                }
+              />
+              <EliminarPacienteButton
+                id={paciente.id}
+                nombre={`${paciente.nombres} ${paciente.apellidos}`}
+                activo={paciente.activo}
+                trigger={
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    title="Eliminar paciente"
+                    className="text-slate-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 }
               />

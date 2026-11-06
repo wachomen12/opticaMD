@@ -281,12 +281,11 @@ export default async function PacientesPage({
                                 </Button>
                               }
                             />
-                            {paciente.activo && (
-                              <EliminarPacienteButton
-                                id={paciente.id}
-                                nombre={`${paciente.nombres} ${paciente.apellidos}`}
-                              />
-                            )}
+                            <EliminarPacienteButton
+                              id={paciente.id}
+                              nombre={`${paciente.nombres} ${paciente.apellidos}`}
+                              activo={paciente.activo}
+                            />
                           </div>
                         </TableCell>
                       </TableRow>

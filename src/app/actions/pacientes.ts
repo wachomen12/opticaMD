@@ -166,6 +166,77 @@ export async function eliminarPaciente(id: string): Promise<ActionState> {
   }
 }
 
+/**
+ * Registros que se verán afectados si se elimina definitivamente al paciente.
+ * Se usa para avisar en el diálogo de confirmación antes de borrar.
+ */
+export async function resumenEliminacionPaciente(id: string): Promise<{
+  ventas: number;
+  historias: number;
+}> {
+  if (!id) return { ventas: 0, historias: 0 };
+
+  const paciente = await prisma.paciente.findUnique({
+    where: { id },
+    select: { _count: { select: { ventas: true, historias: true } } },
+  });
+
+  return {
+    ventas: paciente?._count.ventas ?? 0,
+    historias: paciente?._count.historias ?? 0,
+  };
+}
+
+/**
+ * Elimina definitivamente al paciente de la base de datos.
+ * - Sus historias clínicas se eliminan en cascada.
+ * - Las ventas se conservan en la contabilidad y mantienen el nombre del
+ *   paciente en `clienteNombre` para no perder la trazabilidad del comprobante.
+ */
+export async function eliminarPacienteDefinitivo(id: string): Promise<ActionState> {
+  if (!id) return { ok: false, message: "Paciente no identificado" };
+
+  try {
+    const paciente = await prisma.paciente.findUnique({
+      where: { id },
+      select: { id: true, nombres: true, apellidos: true },
+    });
+
+    if (!paciente) {
+      return { ok: false, message: "El paciente ya no existe" };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.venta.updateMany({
+        where: { pacienteId: id, clienteNombre: null },
+        data: { clienteNombre: `${paciente.nombres} ${paciente.apellidos}` },
+      });
+      await tx.paciente.delete({ where: { id } });
+    });
+
+    revalidatePath("/pacientes");
+    revalidatePath("/dashboard");
+    revalidatePath("/ventas");
+    revalidatePath("/reportes");
+
+    return { ok: true, message: "Paciente eliminado definitivamente" };
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2003"
+    ) {
+      return {
+        ok: false,
+        message:
+          "No se pudo eliminar: el paciente tiene registros vinculados. Archívalo para conservar la trazabilidad.",
+      };
+    }
+
+    console.error("[eliminarPacienteDefinitivo]", error);
+    return { ok: false, message: "No se pudo eliminar el paciente" };
+  }
+}
+
 export async function reactivarPaciente(id: string): Promise<ActionState> {
   if (!id) return { ok: false, message: "Paciente no identificado" };
   try {
