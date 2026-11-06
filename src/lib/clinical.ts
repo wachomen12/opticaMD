@@ -72,7 +72,7 @@ export const TIPOS_LENTE = ["Monofocal", "Bifocal", "Progresivo", "Otro"] as con
 
 export const TRATAMIENTOS = [
   "Antirreflejo",
-  "Filtro UV",
+  "Transitions",
   "Filtro de luz azul",
   "Fotocromático",
   "Polarizado",
