@@ -166,6 +166,17 @@ El archivo [`supabase/schema.sql`](supabase/schema.sql) contiene el DDL completo
 
 Después de crear las tablas, ejecuta `npm run db:admin` para registrar el usuario administrador en `usuarios`.
 
+### Solución de problemas de conexión (Neon)
+
+- `DATABASE_URL` es la que usa la aplicación en tiempo de ejecución; `DIRECT_URL` solo la utiliza Prisma CLI (`db push`, `db:admin`).
+- En Neon, usa la cadena **Pooled** para `DATABASE_URL` (host con `-pooler`) y la **Direct** para `DIRECT_URL` (sin `-pooler`). Ambas con `?sslmode=require`.
+- Si la contraseña contiene `@`, `#`, `%`, `/` o `:`, codifícala en la URL (`@` → `%40`, `#` → `%23`, `%` → `%25`, `/` → `%2F`, `:` → `%3A`).
+- Después de crear o modificar `.env`, reinicia `npm run dev`: Next.js solo lee el archivo al arrancar.
+- En Vercel, el archivo `.env` no se sube. Define las variables en **Settings → Environment Variables** y vuelve a desplegar.
+- Si Neon estuvo suspendido, la primera conexión puede tardar; añade `connect_timeout=15` a la URL.
+- Ejecuta `npm run db:check` para comprobar la conexión, las tablas y los usuarios registrados.
+- Si falta la tabla `usuarios`, ejecuta `npx prisma db push`. Si la tabla existe pero está vacía, ejecuta `npm run db:admin`.
+
 ---
 
 ## ☁️ Despliegue en Vercel
@@ -206,6 +217,7 @@ npm run db:admin
 | `npm run lint` | Linter de Next.js |
 | `npm run db:push` | Sincroniza `schema.prisma` con PostgreSQL |
 | `npm run db:admin` | Crea o actualiza el usuario administrador en `usuarios` |
+| `npm run db:check` | Verifica conexión, tablas y usuarios registrados |
 | `npm run db:studio` | Abre Prisma Studio |
 
 ---
