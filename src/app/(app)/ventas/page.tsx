@@ -183,8 +183,8 @@ export default async function VentasPage({
                     <TableHead>Detalle</TableHead>
                     <TableHead className="text-right">Total</TableHead>
                     <TableHead className="text-right">Saldo</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Entrega</TableHead>
+                    <TableHead>Estado de pago</TableHead>
+                    <TableHead>Estado de entrega</TableHead>
                     <TableHead className="pr-2 text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>

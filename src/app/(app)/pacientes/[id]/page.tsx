@@ -269,7 +269,7 @@ export default async function PacienteDetallePage({
                         <TableHead>Detalle</TableHead>
                         <TableHead className="text-right">Total</TableHead>
                         <TableHead className="text-right">Saldo</TableHead>
-                        <TableHead>Estado</TableHead>
+                        <TableHead>Estado de pago</TableHead>
                         <TableHead className="pr-5 text-right sm:pr-6">Entrega</TableHead>
                       </TableRow>
                     </TableHeader>
