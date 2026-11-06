@@ -1,26 +1,41 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, IBM_Plex_Sans, JetBrains_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
+/*
+ * Las fuentes se sirven desde el propio proyecto (src/app/fonts).
+ * Así el build no depende de descargar Google Fonts, que fallaba de forma
+ * intermitente en Vercel al compilar `next/font/google`.
+ */
+const jakarta = localFont({
+  src: [
+    { path: "./fonts/plus-jakarta-sans-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/plus-jakarta-sans-500.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/plus-jakarta-sans-600.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/plus-jakarta-sans-700.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-sans",
   display: "swap",
-  weight: ["400", "500", "600", "700"],
 });
 
-const plex = IBM_Plex_Sans({
-  subsets: ["latin"],
+const plex = localFont({
+  src: [
+    { path: "./fonts/ibm-plex-sans-500.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/ibm-plex-sans-600.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/ibm-plex-sans-700.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-display",
   display: "swap",
-  weight: ["500", "600", "700"],
 });
 
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
+const jetbrainsMono = localFont({
+  src: [
+    { path: "./fonts/jetbrains-mono-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/jetbrains-mono-500.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/jetbrains-mono-600.woff2", weight: "600", style: "normal" },
+  ],
   variable: "--font-mono",
   display: "swap",
-  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
