@@ -1,4 +1,4 @@
-﻿-- CreateSchema
+-- CreateSchema
 CREATE SCHEMA IF NOT EXISTS "public";
 
 -- CreateEnum
@@ -18,6 +18,19 @@ CREATE TYPE "CategoriaCompra" AS ENUM ('ARMAZONES', 'LUNAS_LABORATORIO', 'LENTES
 
 -- CreateEnum
 CREATE TYPE "CategoriaGasto" AS ENUM ('ARRIENDO', 'SERVICIOS', 'SUELDOS', 'MANTENIMIENTO', 'PUBLICIDAD', 'OTROS');
+
+-- CreateTable
+CREATE TABLE "usuarios" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "nombre" TEXT NOT NULL,
+    "passwordHash" TEXT NOT NULL,
+    "activo" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "usuarios_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "pacientes" (
@@ -159,6 +172,9 @@ CREATE TABLE "gastos" (
 
     CONSTRAINT "gastos_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "usuarios_email_key" ON "usuarios"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "pacientes_cedula_key" ON "pacientes"("cedula");

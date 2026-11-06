@@ -2,6 +2,8 @@ import { getDataset } from "@/lib/data";
 import { getDashboardData } from "@/lib/accounting";
 import { csvEscape, monthLabel, parseMonthParam } from "@/lib/format";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const { mes, anio } = parseMonthParam(searchParams.get("mes") ?? undefined);

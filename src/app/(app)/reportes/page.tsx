@@ -312,7 +312,6 @@ export default async function ReportesPage({
           </li>
           <li>
             • Documento generado automáticamente por el sistema de gestión de ÓPTICA MD.
-            {dataset.demo && " Datos de demostración."}
           </li>
         </ul>
       </div>

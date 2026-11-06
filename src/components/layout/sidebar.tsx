@@ -14,7 +14,6 @@ import {
   ChevronsRight,
   X,
   Database,
-  FlaskConical,
   LogOut,
 } from "lucide-react";
 import { cerrarSesion } from "@/app/actions/auth";
@@ -36,20 +35,17 @@ type SidebarProps = {
   onToggle: () => void;
   mobileOpen: boolean;
   onClose: () => void;
-  demo: boolean;
   enTaller: number;
   pacientes: number;
 };
 
 function NavContent({
   collapsed,
-  demo,
   enTaller,
   pacientes,
   onNavigate,
 }: {
   collapsed: boolean;
-  demo: boolean;
   enTaller: number;
   pacientes: number;
   onNavigate?: () => void;
@@ -133,46 +129,25 @@ function NavContent({
       <div className="mt-auto space-y-2 border-t border-white/10 bg-secondary-950/40 p-2.5">
         {!collapsed ? (
           <div className="flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-2">
-            <div
-              className={cn(
-                "flex h-6 w-6 shrink-0 items-center justify-center rounded",
-                demo
-                  ? "bg-accent/20 text-accent-300"
-                  : "bg-emerald-500/20 text-emerald-300",
-              )}
-            >
-              {demo ? (
-                <FlaskConical className="h-3.5 w-3.5" />
-              ) : (
-                <Database className="h-3.5 w-3.5" />
-              )}
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-emerald-500/20 text-emerald-300">
+              <Database className="h-3.5 w-3.5" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[11px] font-medium text-white/90">
-                {demo ? "Entorno Demo" : "Base de Datos Activa"}
+                Base de Datos Activa
               </p>
               <p className="truncate font-mono text-[9.5px] text-white/45">
-                {demo ? "Datos locales de prueba" : "PostgreSQL · Sincronizado"}
+                PostgreSQL · Sincronizado
               </p>
             </div>
-            <span
-              className={cn(
-                "h-1.5 w-1.5 shrink-0 rounded-full",
-                demo ? "bg-accent" : "bg-emerald-400",
-              )}
-            />
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
           </div>
         ) : (
           <div
             className="flex justify-center py-1"
-            title={demo ? "Entorno Demo" : "Base de Datos Activa"}
+            title="Base de Datos Activa"
           >
-            <span
-              className={cn(
-                "h-2 w-2 rounded-full",
-                demo ? "bg-accent" : "bg-emerald-400",
-              )}
-            />
+            <span className="h-2 w-2 rounded-full bg-emerald-400" />
           </div>
         )}
 
@@ -219,7 +194,6 @@ export function Sidebar({
   onToggle,
   mobileOpen,
   onClose,
-  demo,
   enTaller,
   pacientes,
 }: SidebarProps) {
@@ -266,7 +240,6 @@ export function Sidebar({
 
           <NavContent
             collapsed={collapsed}
-            demo={demo}
             enTaller={enTaller}
             pacientes={pacientes}
           />
@@ -323,7 +296,6 @@ export function Sidebar({
             </div>
             <NavContent
               collapsed={false}
-              demo={demo}
               enTaller={enTaller}
               pacientes={pacientes}
               onNavigate={onClose}

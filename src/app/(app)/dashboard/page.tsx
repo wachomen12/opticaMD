@@ -5,11 +5,9 @@ import {
   Package,
   Receipt,
   ShoppingBag,
-  Sparkles,
   TrendingUp,
   Wallet,
 } from "lucide-react";
-import { Alert } from "@/components/ui/alert";
 import { MonthPicker } from "@/components/ui/month-picker";
 import { PageHeader } from "@/components/layout/page-header";
 import { KpiCard } from "@/components/dashboard/kpi-card";
@@ -73,18 +71,6 @@ export default async function DashboardPage({
           </>
         }
       />
-
-      {dataset.demo && (
-        <Alert variant="warning" className="items-center">
-          <span className="flex flex-wrap items-center gap-x-1.5">
-            <Sparkles className="hidden" />
-            <strong>Modo demostración.</strong> Los datos son ejemplos generados automáticamente.
-            Define <code className="rounded bg-white/70 px-1 py-0.5 text-[11px]">DATABASE_URL</code>{" "}
-            en Vercel y ejecuta <code className="rounded bg-white/70 px-1 py-0.5 text-[11px]">npm run db:push</code>{" "}
-            para activar PostgreSQL (Supabase o Neon).
-          </span>
-        </Alert>
-      )}
 
       <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
         <KpiCard

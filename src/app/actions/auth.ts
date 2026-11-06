@@ -6,8 +6,8 @@ import {
   SESSION_COOKIE,
   SESSION_MAX_AGE,
   crearTokenSesion,
-  validarCredenciales,
 } from "@/lib/auth";
+import { validarCredenciales } from "@/lib/usuarios";
 import { getString } from "@/lib/form";
 import type { ActionState } from "@/lib/types";
 
@@ -29,7 +29,18 @@ export async function iniciarSesion(
     return { ok: false, message: "Ingresa tu correo y contraseña." };
   }
 
-  if (!validarCredenciales(email, password)) {
+  let credencialesValidas = false;
+  try {
+    credencialesValidas = await validarCredenciales(email, password);
+  } catch (error) {
+    console.error("[iniciarSesion] Error al validar credenciales", error);
+    return {
+      ok: false,
+      message: "No se pudo conectar con la base de datos. Intenta nuevamente.",
+    };
+  }
+
+  if (!credencialesValidas) {
     return { ok: false, message: "Correo o contraseña incorrectos." };
   }
 

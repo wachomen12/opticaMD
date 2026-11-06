@@ -2,11 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
-import {
-  demoActualizarHistoria,
-  demoActualizarPaciente,
-  demoCrearHistoria,
-} from "@/lib/demo-store";
 import { getHistoria, getHistoriasPaciente, getPaciente } from "@/lib/data";
 import { getBoolean, getNumber, getOptional, getString, parseDateInput } from "@/lib/form";
 import { prisma } from "@/lib/prisma";
@@ -119,10 +114,6 @@ async function actualizarFiliacion(
   pacienteId: string,
   data: ReturnType<typeof leerFiliacion>,
 ): Promise<void> {
-  if (!prisma) {
-    demoActualizarPaciente(pacienteId, data);
-    return;
-  }
   await prisma.paciente.update({ where: { id: pacienteId }, data });
 }
 
@@ -155,17 +146,7 @@ export async function guardarHistoria(
     await actualizarFiliacion(pacienteId, filiacion);
 
     let id = historiaId;
-    if (!prisma) {
-      if (historiaId) {
-        const actualizada = demoActualizarHistoria(historiaId, {
-          ...input,
-          ventaId: existente?.ventaId ?? null,
-        });
-        if (!actualizada) return { ok: false, message: "La historia clínica no existe" };
-      } else {
-        id = demoCrearHistoria(input).id;
-      }
-    } else if (historiaId) {
+    if (historiaId) {
       await prisma.historiaClinica.update({
         where: { id: historiaId },
         data: {

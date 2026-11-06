@@ -1,6 +1,6 @@
 // Prisma schema — ÓPTICA MD
 // Base de datos: PostgreSQL (Supabase / Neon)
-// Ejecutar: npx prisma db push && npm run db:seed
+// Ejecutar: npx prisma db push && npm run db:admin
 
 generator client {
   provider = "prisma-client-js"
@@ -10,6 +10,22 @@ datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────
+//  ACCESO AL SISTEMA
+// ─────────────────────────────────────────────
+
+model Usuario {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  nombre       String
+  passwordHash String
+  activo       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("usuarios")
 }
 
 // ─────────────────────────────────────────────

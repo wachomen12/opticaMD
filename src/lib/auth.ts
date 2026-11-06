@@ -8,30 +8,19 @@ export const SESSION_COOKIE = "optica_session";
 /** Duración de la sesión: 12 horas. */
 export const SESSION_MAX_AGE = 60 * 60 * 12;
 
-export const DEFAULT_ADMIN_EMAIL = "admin@opticamd.ec";
-export const DEFAULT_ADMIN_PASSWORD = "OpticaMD2026!";
-const FALLBACK_SECRET = "optica-md-demo-session-secret-cambiar-en-produccion";
-
 export type Sesion = {
   email: string;
   exp: number;
 };
 
-function adminEmail(): string {
-  return (process.env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL).trim().toLowerCase();
-}
-
-function adminPassword(): string {
-  return process.env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD;
-}
-
 function sessionSecret(): string {
-  return process.env.AUTH_SECRET || FALLBACK_SECRET;
-}
-
-/** true si el login usa las credenciales de demostración por defecto. */
-export function usaCredencialesDemo(): boolean {
-  return !process.env.ADMIN_EMAIL && !process.env.ADMIN_PASSWORD;
+  const secret = process.env.AUTH_SECRET?.trim();
+  if (!secret || secret.length < 32) {
+    throw new Error(
+      "AUTH_SECRET no está configurada. Define una cadena aleatoria de al menos 32 caracteres.",
+    );
+  }
+  return secret;
 }
 
 /** Comparación de strings en tiempo constante (evita filtraciones por timing). */
@@ -43,15 +32,6 @@ function igualesEnTiempoConstante(a: string, b: string): boolean {
       (b.charCodeAt(i % Math.max(b.length, 1)) || 0);
   }
   return diff === 0;
-}
-
-export function validarCredenciales(email: string, password: string): boolean {
-  const emailOk = igualesEnTiempoConstante(
-    email.trim().toLowerCase(),
-    adminEmail(),
-  );
-  const passwordOk = igualesEnTiempoConstante(password, adminPassword());
-  return emailOk && passwordOk;
 }
 
 function base64UrlEncode(bytes: Uint8Array): string {

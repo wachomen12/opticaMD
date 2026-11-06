@@ -7,13 +7,11 @@ import { Topbar } from "./topbar";
 
 export function AppShell({
   children,
-  demo,
   enTaller,
   pacientes,
   todayLabel,
 }: {
   children: React.ReactNode;
-  demo: boolean;
   enTaller: number;
   pacientes: number;
   todayLabel: string;
@@ -41,7 +39,6 @@ export function AppShell({
         onToggle={toggleCollapsed}
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
-        demo={demo}
         enTaller={enTaller}
         pacientes={pacientes}
       />
@@ -53,7 +50,6 @@ export function AppShell({
       >
         <Topbar
           onMenu={() => setMobileOpen(true)}
-          demo={demo}
           enTaller={enTaller}
           todayLabel={todayLabel}
         />

@@ -12,7 +12,6 @@ import {
   type PagoVenta as PrismaPagoVenta,
   type Venta as PrismaVenta,
 } from "@prisma/client";
-import { getDemoDataset, getStore } from "./demo-store";
 import { prisma } from "./prisma";
 import type {
   CategoriaCompra,
@@ -31,9 +30,7 @@ import type {
 } from "./types";
 
 // ─────────────────────────────────────────────────────────────
-//  Capa de acceso a datos.
-//  · Con DATABASE_URL → PostgreSQL vía Prisma.
-//  · Sin DATABASE_URL → dataset demo en memoria (modo showcase).
+//  Capa de acceso a datos — PostgreSQL vía Prisma.
 // ─────────────────────────────────────────────────────────────
 
 const n = (value: unknown) => Number(value ?? 0);
@@ -167,120 +164,64 @@ function mapHistoria(h: PrismaHistoriaClinica): HistoriaClinica {
 }
 
 export async function getDataset(): Promise<Dataset> {
-  if (!prisma) return getDemoDataset();
+  const [pacientes, ventas, compras, gastos] = await Promise.all([
+    prisma.paciente.findMany({ orderBy: [{ apellidos: "asc" }, { nombres: "asc" }] }),
+    prisma.venta.findMany({ include: { pagos: true }, orderBy: { fecha: "desc" } }),
+    prisma.compra.findMany({ orderBy: { fecha: "desc" } }),
+    prisma.gasto.findMany({ orderBy: { fecha: "desc" } }),
+  ]);
 
-  try {
-    const [pacientes, ventas, compras, gastos] = await Promise.all([
-      prisma.paciente.findMany({ orderBy: [{ apellidos: "asc" }, { nombres: "asc" }] }),
-      prisma.venta.findMany({ include: { pagos: true }, orderBy: { fecha: "desc" } }),
-      prisma.compra.findMany({ orderBy: { fecha: "desc" } }),
-      prisma.gasto.findMany({ orderBy: { fecha: "desc" } }),
-    ]);
-
-    return {
-      pacientes: pacientes.map(mapPaciente),
-      ventas: ventas.map(mapVenta),
-      compras: compras.map(mapCompra),
-      gastos: gastos.map(mapGasto),
-      demo: false,
-    };
-  } catch (error) {
-    console.error(
-      "[ÓPTICA MD] No fue posible conectar con PostgreSQL. Se activa el dataset demo.",
-      error,
-    );
-    return getDemoDataset();
-  }
+  return {
+    pacientes: pacientes.map(mapPaciente),
+    ventas: ventas.map(mapVenta),
+    compras: compras.map(mapCompra),
+    gastos: gastos.map(mapGasto),
+  };
 }
 
 export async function getPaciente(id: string): Promise<Paciente | null> {
-  if (prisma) {
-    try {
-      const paciente = await prisma.paciente.findUnique({ where: { id } });
-      if (paciente) return mapPaciente(paciente);
-    } catch (error) {
-      console.error("[ÓPTICA MD] Error al cargar paciente", error);
-    }
-  }
-  const dataset = await getDataset();
-  return dataset.pacientes.find((p) => p.id === id) ?? null;
+  const paciente = await prisma.paciente.findUnique({ where: { id } });
+  return paciente ? mapPaciente(paciente) : null;
 }
 
 export async function getVenta(id: string): Promise<Venta | null> {
-  if (prisma) {
-    try {
-      const venta = await prisma.venta.findUnique({
-        where: { id },
-        include: { pagos: true },
-      });
-      if (venta) return mapVenta(venta);
-    } catch (error) {
-      console.error("[ÓPTICA MD] Error al cargar venta", error);
-    }
-  }
-  return getStore().ventas.find((venta) => venta.id === id) ?? null;
+  const venta = await prisma.venta.findUnique({
+    where: { id },
+    include: { pagos: true },
+  });
+  return venta ? mapVenta(venta) : null;
 }
 
 /** Historia clínica vinculada a una venta (si existe). */
 export async function getHistoriaPorVenta(
   ventaId: string,
 ): Promise<HistoriaClinica | null> {
-  if (prisma) {
-    try {
-      const historia = await prisma.historiaClinica.findUnique({
-        where: { ventaId },
-      });
-      if (historia) return mapHistoria(historia);
-    } catch (error) {
-      console.error("[ÓPTICA MD] Error al cargar historia de la venta", error);
-    }
-  }
-  return getStore().historias.find((historia) => historia.ventaId === ventaId) ?? null;
+  const historia = await prisma.historiaClinica.findUnique({
+    where: { ventaId },
+  });
+  return historia ? mapHistoria(historia) : null;
 }
 
 /** Todas las historias vinculadas a una venta, indexables por ventaId. */
 export async function getHistoriasVinculadas(): Promise<HistoriaClinica[]> {
-  if (prisma) {
-    try {
-      const historias = await prisma.historiaClinica.findMany({
-        where: { ventaId: { not: null } },
-      });
-      return historias.map(mapHistoria);
-    } catch (error) {
-      console.error("[ÓPTICA MD] Error al cargar historias vinculadas", error);
-    }
-  }
-  return getStore().historias.filter((historia) => Boolean(historia.ventaId));
+  const historias = await prisma.historiaClinica.findMany({
+    where: { ventaId: { not: null } },
+  });
+  return historias.map(mapHistoria);
 }
 
 /** Historias clínicas de un paciente, de la más reciente a la más antigua. */
 export async function getHistoriasPaciente(pacienteId: string): Promise<HistoriaClinica[]> {
-  if (prisma) {
-    try {
-      const historias = await prisma.historiaClinica.findMany({
-        where: { pacienteId },
-        orderBy: { fecha: "desc" },
-      });
-      return historias.map(mapHistoria);
-    } catch (error) {
-      console.error("[ÓPTICA MD] Error al cargar historias clínicas", error);
-    }
-  }
-  return [...getStore().historias]
-    .filter((historia) => historia.pacienteId === pacienteId)
-    .sort((a, b) => +new Date(b.fecha) - +new Date(a.fecha));
+  const historias = await prisma.historiaClinica.findMany({
+    where: { pacienteId },
+    orderBy: { fecha: "desc" },
+  });
+  return historias.map(mapHistoria);
 }
 
 export async function getHistoria(id: string): Promise<HistoriaClinica | null> {
-  if (prisma) {
-    try {
-      const historia = await prisma.historiaClinica.findUnique({ where: { id } });
-      if (historia) return mapHistoria(historia);
-    } catch (error) {
-      console.error("[ÓPTICA MD] Error al cargar historia clínica", error);
-    }
-  }
-  return getStore().historias.find((historia) => historia.id === id) ?? null;
+  const historia = await prisma.historiaClinica.findUnique({ where: { id } });
+  return historia ? mapHistoria(historia) : null;
 }
 
 /** Nombres visibles de pacientes para selects y tablas. */

@@ -8,11 +8,6 @@ import {
 } from "lucide-react";
 import { LoginForm } from "@/components/auth/login-form";
 import { LogoOpticaMD } from "@/components/brand/logo-optica-md";
-import {
-  DEFAULT_ADMIN_EMAIL,
-  DEFAULT_ADMIN_PASSWORD,
-  usaCredencialesDemo,
-} from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Iniciar sesión",
@@ -44,9 +39,6 @@ export default async function LoginPage({
 }) {
   const params = await searchParams;
   const next = params.next ?? "/dashboard";
-  const credencialesDemo = usaCredencialesDemo()
-    ? { email: DEFAULT_ADMIN_EMAIL, password: DEFAULT_ADMIN_PASSWORD }
-    : undefined;
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-secondary text-white">
@@ -117,7 +109,7 @@ export default async function LoginPage({
             </p>
 
             <div className="mt-6">
-              <LoginForm next={next} credencialesDemo={credencialesDemo} />
+              <LoginForm next={next} />
             </div>
           </div>
 

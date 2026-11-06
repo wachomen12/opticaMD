@@ -26,12 +26,10 @@ const TITLES: Array<{ match: RegExp; section: string; title: string }> = [
 
 export function Topbar({
   onMenu,
-  demo,
   enTaller,
   todayLabel,
 }: {
   onMenu: () => void;
-  demo: boolean;
   enTaller: number;
   todayLabel: string;
 }) {
@@ -131,13 +129,6 @@ export function Topbar({
               {todayLabel}
             </span>
           </div>
-
-          {demo && (
-            <span className="hidden items-center gap-1.5 rounded border border-amber-300/80 bg-amber-50 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-amber-800 sm:inline-flex">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-              Demo
-            </span>
-          )}
         </div>
       </div>
     </header>

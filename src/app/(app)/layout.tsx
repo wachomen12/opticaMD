@@ -2,6 +2,10 @@ import { AppShell } from "@/components/layout/app-shell";
 import { getDataset } from "@/lib/data";
 import { MESES } from "@/lib/constants";
 
+// Todas las páginas de la aplicación dependen de PostgreSQL y de la sesión:
+// se renderizan en cada petición, nunca durante el build.
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const dataset = await getDataset();
   const enTaller = dataset.ventas.filter((v) => v.estadoEntrega !== "ENTREGADO").length;
@@ -11,7 +15,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <AppShell
-      demo={dataset.demo}
       enTaller={enTaller}
       pacientes={pacientes}
       todayLabel={todayLabel}

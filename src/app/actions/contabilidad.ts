@@ -2,13 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
-import {
-  demoCrearCompra,
-  demoCrearGasto,
-  demoCrearVenta,
-  demoRegistrarPago,
-  demoVincularVentaHistoria,
-} from "@/lib/demo-store";
 import { prisma } from "@/lib/prisma";
 import { getString, getNumber, getOptional, getBoolean, parseDateInput } from "@/lib/form";
 import type {
@@ -51,10 +44,6 @@ function refresh() {
 
 async function siguienteSecuenciaVenta(fecha: Date): Promise<string> {
   const year = fecha.getFullYear();
-  if (!prisma) {
-    const { getStore } = await import("@/lib/demo-store");
-    return `V-${year}-${String(getStore().ventaSeq + 1).padStart(4, "0")}`;
-  }
   const count = await prisma.venta.count({
     where: {
       fecha: {
@@ -107,71 +96,55 @@ export async function crearVenta(
   const estadoPago = anticipo <= 0 ? "PENDIENTE" : anticipo >= total ? "PAGADA" : "PARCIAL";
 
   try {
-    if (!prisma) {
-      const venta = demoCrearVenta({
-        fecha,
-        categoria,
-        descripcion,
-        total,
-        metodoPago,
-        estadoEntrega,
-        pacienteId,
-        clienteNombre,
-        anticipo,
-        notas,
-      });
-      if (historiaId) demoVincularVentaHistoria(historiaId, venta.id);
-    } else {
-      const secuencia = await siguienteSecuenciaVenta(fecha);
-      const base = Number(secuencia.split("-").at(-1));
-      const year = fecha.getFullYear();
-      let ventaCreadaId: string | null = null;
-      for (let intento = 0; intento < 5; intento++) {
-        const codigo = `V-${year}-${String(base + intento).padStart(4, "0")}`;
-        try {
-          const creada = await prisma.venta.create({
-            data: {
-              codigo,
-              fecha,
-              categoria,
-              descripcion,
-              total,
-              metodoPago,
-              estadoPago,
-              estadoEntrega,
-              pacienteId,
-              clienteNombre,
-              notas,
-              pagos:
-                anticipo > 0
-                  ? {
-                      create: {
-                        monto: anticipo,
-                        metodo: metodoPago,
-                        fecha,
-                        nota: anticipo < total ? "Abono inicial / anticipo" : "Pago total",
-                      },
-                    }
-                  : undefined,
-            },
-          });
-          ventaCreadaId = creada.id;
-          break;
-        } catch (error) {
-          const esDuplicado =
-            error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
-          if (!esDuplicado || intento === 4) throw error;
-        }
+    const secuencia = await siguienteSecuenciaVenta(fecha);
+    const base = Number(secuencia.split("-").at(-1));
+    const year = fecha.getFullYear();
+    let ventaCreadaId: string | null = null;
+    for (let intento = 0; intento < 5; intento++) {
+      const codigo = `V-${year}-${String(base + intento).padStart(4, "0")}`;
+      try {
+        const creada = await prisma.venta.create({
+          data: {
+            codigo,
+            fecha,
+            categoria,
+            descripcion,
+            total,
+            metodoPago,
+            estadoPago,
+            estadoEntrega,
+            pacienteId,
+            clienteNombre,
+            notas,
+            pagos:
+              anticipo > 0
+                ? {
+                    create: {
+                      monto: anticipo,
+                      metodo: metodoPago,
+                      fecha,
+                      nota: anticipo < total ? "Abono inicial / anticipo" : "Pago total",
+                    },
+                  }
+                : undefined,
+          },
+        });
+        ventaCreadaId = creada.id;
+        break;
+      } catch (error) {
+        const esDuplicado =
+          error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+        if (!esDuplicado || intento === 4) throw error;
       }
-      if (historiaId && ventaCreadaId) {
-        try {
-          await prisma.historiaClinica.update({
-            where: { id: historiaId },
-            data: { ventaId: ventaCreadaId },
-          });
-        } catch (error) {
-          console.error("[crearVenta] No se pudo vincular la historia clínica", error);
-        }
+    }
+    if (historiaId && ventaCreadaId) {
+      try {
+        await prisma.historiaClinica.update({
+          where: { id: historiaId },
+          data: { ventaId: ventaCreadaId },
+        });
+      } catch (error) {
+        console.error("[crearVenta] No se pudo vincular la historia clínica", error);
       }
     }
 
@@ -203,39 +176,28 @@ export async function registrarPago(
   }
 
   try {
-    if (!prisma) {
-      const venta = demoRegistrarPago({
-        ventaId,
-        monto,
-        metodo: metodoRaw as MetodoPago,
-        fecha,
-        nota,
-      });
-      if (!venta) return { ok: false, message: "La venta ya no existe" };
-    } else {
-      const venta = await prisma.venta.findUnique({
-        where: { id: ventaId },
-        include: { pagos: true },
-      });
-      if (!venta) return { ok: false, message: "La venta ya no existe" };
-      const pagado = venta.pagos.reduce((s, p) => s + Number(p.monto), 0);
-      const saldo = Number(venta.total) - pagado;
-      if (monto > saldo + 0.01) {
-        return { ok: false, message: `El saldo pendiente es de $${saldo.toFixed(2)}` };
-      }
-      const nuevoPagado = pagado + monto;
-      await prisma.$transaction([
-        prisma.pagoVenta.create({
-          data: { ventaId, monto, metodo: metodoRaw as MetodoPago, fecha, nota },
-        }),
-        prisma.venta.update({
-          where: { id: ventaId },
-          data: {
-            estadoPago: nuevoPagado >= Number(venta.total) - 0.01 ? "PAGADA" : "PARCIAL",
-          },
-        }),
-      ]);
+    const venta = await prisma.venta.findUnique({
+      where: { id: ventaId },
+      include: { pagos: true },
+    });
+    if (!venta) return { ok: false, message: "La venta ya no existe" };
+    const pagado = venta.pagos.reduce((s, p) => s + Number(p.monto), 0);
+    const saldo = Number(venta.total) - pagado;
+    if (monto > saldo + 0.01) {
+      return { ok: false, message: `El saldo pendiente es de $${saldo.toFixed(2)}` };
     }
+    const nuevoPagado = pagado + monto;
+    await prisma.$transaction([
+      prisma.pagoVenta.create({
+        data: { ventaId, monto, metodo: metodoRaw as MetodoPago, fecha, nota },
+      }),
+      prisma.venta.update({
+        where: { id: ventaId },
+        data: {
+          estadoPago: nuevoPagado >= Number(venta.total) - 0.01 ? "PAGADA" : "PARCIAL",
+        },
+      }),
+    ]);
 
     refresh();
     return { ok: true, message: "Abono registrado correctamente" };
@@ -251,17 +213,10 @@ export async function actualizarEntrega(
 ): Promise<ActionState> {
   if (!ENTREGAS.includes(estado)) return { ok: false, message: "Estado no válido" };
   try {
-    if (!prisma) {
-      const { getStore } = await import("@/lib/demo-store");
-      const venta = getStore().ventas.find((v) => v.id === ventaId);
-      if (!venta) return { ok: false, message: "Venta no encontrada" };
-      venta.estadoEntrega = estado;
-    } else {
-      await prisma.venta.update({
-        where: { id: ventaId },
-        data: { estadoEntrega: estado },
-      });
-    }
+    await prisma.venta.update({
+      where: { id: ventaId },
+      data: { estadoEntrega: estado },
+    });
     refresh();
     return { ok: true, message: "Estado de entrega actualizado" };
   } catch (error) {
@@ -296,8 +251,8 @@ export async function crearCompra(
   }
 
   try {
-    if (!prisma) {
-      demoCrearCompra({
+    await prisma.compra.create({
+      data: {
         fecha,
         proveedor,
         proveedorRuc,
@@ -305,20 +260,8 @@ export async function crearCompra(
         categoria: categoriaRaw as CategoriaCompra,
         descripcion,
         total,
-      });
-    } else {
-      await prisma.compra.create({
-        data: {
-          fecha,
-          proveedor,
-          proveedorRuc,
-          numeroComprobante,
-          categoria: categoriaRaw as CategoriaCompra,
-          descripcion,
-          total,
-        },
-      });
-    }
+      },
+    });
     refresh();
     return { ok: true, message: "Compra registrada correctamente" };
   } catch (error) {
@@ -351,27 +294,16 @@ export async function crearGasto(
   }
 
   try {
-    if (!prisma) {
-      demoCrearGasto({
+    await prisma.gasto.create({
+      data: {
         fecha,
         categoria: categoriaRaw as CategoriaGasto,
         descripcion,
         monto,
         recurrente,
         comprobante,
-      });
-    } else {
-      await prisma.gasto.create({
-        data: {
-          fecha,
-          categoria: categoriaRaw as CategoriaGasto,
-          descripcion,
-          monto,
-          recurrente,
-          comprobante,
-        },
-      });
-    }
+      },
+    });
     refresh();
     return { ok: true, message: "Gasto registrado correctamente" };
   } catch (error) {

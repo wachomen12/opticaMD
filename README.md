@@ -14,7 +14,8 @@ Construida con **Next.js 15 (App Router)**, **TypeScript**, **Tailwind CSS**, **
 - Pantalla de **Login** en `/login` con la identidad visual de ÓPTICA MD.
 - Sesión firmada con **HMAC-SHA256** y cookie `httpOnly` (12 horas, `sameSite=lax`, `secure` en producción).
 - `middleware.ts` protege `/dashboard`, `/pacientes`, `/ventas`, `/compras`, `/gastos` y `/reportes`; las rutas públicas se limitan al login y a los recursos estáticos.
-- Credenciales configurables con `ADMIN_EMAIL` y `ADMIN_PASSWORD`; el secreto de firma se define con `AUTH_SECRET`.
+- Inicio de sesión validado contra la tabla `usuarios` de PostgreSQL (contraseña hasheada con scrypt); el secreto de firma se define con `AUTH_SECRET`.
+- El administrador inicial se crea con `npm run db:admin` a partir de `ADMIN_EMAIL`, `ADMIN_PASSWORD` y `ADMIN_NAME`.
 - Botón **Cerrar sesión** en el sidebar y redirección segura después del login.
 
 ### Dashboard financiero
@@ -74,7 +75,7 @@ Construida con **Next.js 15 (App Router)**, **TypeScript**, **Tailwind CSS**, **
 - Interfaz corporativa responsive con sidebar colapsable y cajón móvil.
 - Paleta de marca: azul `#235D92`, azul profundo `#123568`, naranja `#EA711B`, fondo `#F8FAFC`.
 - Formularios en diálogos con validación y mensajes de error en español.
-- Modo demostración automático cuando no hay base de datos configurada.
+- Persistencia real en PostgreSQL: no existen datos de ejemplo ni modo demostración.
 
 ### Logo oficial
 - El componente `LogoOpticaMD` carga **`public/logo-optica-md.png`** en el sidebar, login, receta y recibo.
@@ -98,27 +99,34 @@ Construida con **Next.js 15 (App Router)**, **TypeScript**, **Tailwind CSS**, **
 
 ---
 
-## 🚀 Inicio rápido (modo demostración)
+## 🚀 Inicio rápido
 
-Requisitos: **Node.js 20+** y npm.
+Requisitos: **Node.js 20+**, npm y una base **PostgreSQL** (Supabase o Neon).
+
+1. Instala dependencias:
 
 ```bash
 npm install
+```
+
+2. Copia `.env.example` a `.env` y completa `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` y `ADMIN_NAME`.
+
+3. Crea el esquema en PostgreSQL y el usuario administrador:
+
+```bash
+npm run db:push
+npm run db:admin
+```
+
+4. Inicia la aplicación:
+
+```bash
 npm run dev
 ```
 
-Abre [http://localhost:3000](http://localhost:3000). Serás redirigido a `/login`.
+Abre [http://localhost:3000](http://localhost:3000). Serás redirigido a `/login` y podrás acceder con el correo y la contraseña definidos en `ADMIN_EMAIL` y `ADMIN_PASSWORD`.
 
-Credenciales de demostración (si no defines `ADMIN_EMAIL` ni `ADMIN_PASSWORD`):
-
-```text
-Correo:     admin@opticamd.ec
-Contraseña: OpticaMD2026!
-```
-
-Sin variables de entorno, la aplicación arranca en **modo demostración** con un conjunto de datos realista de 6 meses (pacientes, historias clínicas, ventas, pagos, compras y gastos). Puedes crear y editar registros: los cambios se mantienen en memoria mientras el servidor esté activo y se reinician al reiniciarlo.
-
-> El modo demo se activa automáticamente si `DATABASE_URL` no existe, es un placeholder o si `DEMO_MODE=true`.
+> La aplicación no incluye datos de ejemplo ni funciona sin base de datos: todas las consultas y escrituras van directamente a PostgreSQL mediante Prisma.
 
 ---
 
@@ -137,27 +145,26 @@ NEXT_PUBLIC_APP_NAME="ÓPTICA MD"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 
 ADMIN_EMAIL="admin@opticamd.ec"
-ADMIN_PASSWORD="OpticaMD2026!"
+ADMIN_PASSWORD="una-contraseña-segura-de-al-menos-8-caracteres"
+ADMIN_NAME="Administrador"
 AUTH_SECRET="una-cadena-larga-aleatoria-de-al-menos-32-caracteres"
 ```
 
-3. Genera el esquema y carga los datos de ejemplo:
+3. Genera el esquema y crea el usuario administrador:
 
 ```bash
 npm run db:push
-npm run db:seed
+npm run db:admin
 npm run dev
 ```
+
+`npm run db:admin` crea o actualiza el usuario indicado en `ADMIN_EMAIL` con la contraseña de `ADMIN_PASSWORD`, almacenada como hash scrypt en la tabla `usuarios`. Puedes ejecutarlo de nuevo cuando necesites restablecer la contraseña.
 
 ### Alternativa: ejecutar el SQL directamente
 
 El archivo [`supabase/schema.sql`](supabase/schema.sql) contiene el DDL completo (tipos enum, tablas, índices y llaves foráneas) generado desde Prisma. Puedes pegarlo en el **SQL Editor** de Supabase si prefieres no usar `prisma db push`.
 
-Para cargar solo los datos de ejemplo sobre una base ya creada:
-
-```bash
-npm run db:seed
-```
+Después de crear las tablas, ejecuta `npm run db:admin` para registrar el usuario administrador en `usuarios`.
 
 ---
 
@@ -170,19 +177,20 @@ npm run db:seed
    - `DIRECT_URL`
    - `ADMIN_EMAIL`
    - `ADMIN_PASSWORD`
+   - `ADMIN_NAME`
    - `AUTH_SECRET` (cadena aleatoria de al menos 32 caracteres; por ejemplo `openssl rand -base64 48`)
    - `NEXT_PUBLIC_APP_NAME`
    - `NEXT_PUBLIC_APP_URL` (tu dominio público, p. ej. `https://optica-md.vercel.app`)
-4. Ejecuta el esquema contra la base de producción (una sola vez):
+4. Ejecuta el esquema y crea el administrador contra la base de producción (una sola vez):
 
 ```bash
 npx prisma db push
-npm run db:seed   # opcional: datos de ejemplo
+npm run db:admin
 ```
 
 5. Despliega. El comando de build ya incluye `prisma generate` y `package.json` define `postinstall: prisma generate` para que Vercel compile Prisma correctamente.
 
-> **Importante:** no definas `DEMO_MODE=true` en producción si quieres persistencia real. En Vercel el modo demo funciona, pero cada instancia/serverless puede reiniciar su estado en memoria.
+> **Importante:** la aplicación requiere `DATABASE_URL`, `DIRECT_URL` y `AUTH_SECRET` válidos. Sin ellos el login y las consultas fallarán; no existe un modo de respaldo con datos locales.
 >
 > Cambia siempre `ADMIN_EMAIL`, `ADMIN_PASSWORD` y `AUTH_SECRET` antes de publicar. En producción la cookie de sesión se marca `secure` y solo viaja por HTTPS.
 
@@ -197,7 +205,7 @@ npm run db:seed   # opcional: datos de ejemplo
 | `npm start` | Servidor de producción |
 | `npm run lint` | Linter de Next.js |
 | `npm run db:push` | Sincroniza `schema.prisma` con PostgreSQL |
-| `npm run db:seed` | Carga datos de demostración |
+| `npm run db:admin` | Crea o actualiza el usuario administrador en `usuarios` |
 | `npm run db:studio` | Abre Prisma Studio |
 
 ---
@@ -206,8 +214,8 @@ npm run db:seed   # opcional: datos de ejemplo
 
 ```
 prisma/
-  schema.prisma          # Modelos y enums (Paciente, HistoriaClinica, Venta, PagoVenta, Compra, Gasto)
-  seed.ts                # Datos de ejemplo para PostgreSQL
+  schema.prisma          # Modelos y enums (Usuario, Paciente, HistoriaClinica, Venta, PagoVenta, Compra, Gasto)
+  bootstrap.ts           # Crea/actualiza el usuario administrador (db:admin)
 supabase/
   schema.sql             # DDL listo para el SQL Editor de Supabase
 src/
@@ -238,11 +246,12 @@ src/
     ui/                  # Componentes base reutilizables
   lib/
     accounting.ts        # Cálculos de KPIs, flujo de caja y agregados
-    auth.ts              # Credenciales, sesión firmada y validación de token
+    auth.ts              # Sesión firmada y validación de token
+    usuarios.ts          # Validación de credenciales contra la tabla `usuarios`
+    password.ts          # Hash y verificación scrypt
     clinical.ts          # Catálogos clínicos, filas de AV/RX y resumen de receta
-    data.ts              # Capa de acceso a datos (Prisma o demo)
-    demo-store.ts        # Dataset y mutaciones en memoria
-    prisma.ts            # Cliente Prisma + detección de modo demo
+    data.ts              # Capa de acceso a datos (solo Prisma/PostgreSQL)
+    prisma.ts            # Cliente Prisma (única fuente de datos)
     whatsapp.ts          # Plantillas de WhatsApp y normalización de teléfonos
     format.ts            # Formato de moneda, fechas y etiquetas
   middleware.ts          # Protección de rutas y redirección al login
@@ -279,8 +288,8 @@ Esta entrega incluye la base contable, la gestión de pacientes, la **historia c
 ## 📝 Notas
 
 - El acceso está protegido por login y sesión firmada; cambia las credenciales y `AUTH_SECRET` antes de publicar.
-- Los datos de demostración se generan de forma determinista respecto a la fecha actual.
-- Para restablecer el demo basta con reiniciar el servidor.
+- Todos los datos se leen y escriben en PostgreSQL; no hay datos de ejemplo ni estado en memoria.
+- El usuario administrador se gestiona con `npm run db:admin` y se guarda en la tabla `usuarios`.
 - El logo oficial se toma de `public/logo-optica-md.png`; si no existe, se usa el fallback de marca.
 - Moneda: USD. Zona horaria de referencia: Ecuador (UTC−5).
 

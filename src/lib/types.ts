@@ -1,6 +1,6 @@
 // ─────────────────────────────────────────────────────────────
 //  Tipos de dominio — ÓPTICA MD
-//  Se usan tanto en el modo PostgreSQL como en el modo demo.
+//  Contrato entre la capa de datos (Prisma) y la interfaz.
 // ─────────────────────────────────────────────────────────────
 
 export type CategoriaVenta =
@@ -159,11 +159,11 @@ export type HistoriaClinicaInput = Omit<
   "id" | "numeroHistoria" | "createdAt" | "updatedAt"
 >;
 
-export interface Dataset {  pacientes: Paciente[];
+export interface Dataset {
+  pacientes: Paciente[];
   ventas: Venta[];
   compras: Compra[];
   gastos: Gasto[];
-  demo: boolean;
 }
 
 export type ActionState = {

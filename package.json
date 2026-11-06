@@ -9,9 +9,12 @@
     "start": "next start",
     "lint": "next lint",
     "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:admin": "prisma db seed",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"
+  },
+  "prisma": {
+    "seed": "tsx prisma/bootstrap.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",

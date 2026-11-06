@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { ArrowRight, Eye, EyeOff, KeyRound, Mail, ShieldCheck, Terminal } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, KeyRound, Mail, ShieldCheck } from "lucide-react";
 import { iniciarSesion } from "@/app/actions/auth";
 import { Alert } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
@@ -11,26 +11,14 @@ import type { ActionState } from "@/lib/types";
 
 const initialState: ActionState = { ok: false };
 
-export function LoginForm({
-  next,
-  credencialesDemo,
-}: {
-  next: string;
-  credencialesDemo?: { email: string; password: string };
-}) {
+export function LoginForm({ next }: { next: string }) {
   const [state, formAction] = useActionState<ActionState, FormData>(
     iniciarSesion,
     initialState,
   );
   const [verPassword, setVerPassword] = useState(false);
-  const [email, setEmail] = useState(credencialesDemo?.email ?? "");
-  const [password, setPassword] = useState(credencialesDemo?.password ?? "");
-
-  function cargarCredencialesDemo() {
-    if (!credencialesDemo) return;
-    setEmail(credencialesDemo.email);
-    setPassword(credencialesDemo.password);
-  }
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   return (
     <form action={formAction} className="space-y-4">
@@ -105,36 +93,6 @@ export function LoginForm({
           <ArrowRight className="h-4 w-4" />
         </SubmitButton>
       </div>
-
-      {credencialesDemo && (
-        <div className="rounded-md border border-slate-200 bg-slate-50/90 p-3">
-          <div className="flex items-center justify-between gap-2 border-b border-slate-200/80 pb-2">
-            <div className="flex items-center gap-1.5">
-              <Terminal className="h-3.5 w-3.5 text-primary" />
-              <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-primary">
-                Credenciales Entorno Demo
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={cargarCredencialesDemo}
-              className="rounded border border-slate-200 bg-white px-2 py-0.5 font-mono text-[9.5px] font-semibold text-ink-muted transition-colors hover:border-primary hover:text-primary"
-            >
-              Rellenar
-            </button>
-          </div>
-          <div className="mt-2 grid grid-cols-2 gap-2 font-mono text-[11px]">
-            <div className="truncate rounded border border-slate-200/70 bg-white px-2 py-1 text-ink">
-              <span className="block text-[8.5px] uppercase text-ink-subtle">Usuario</span>
-              {credencialesDemo.email}
-            </div>
-            <div className="truncate rounded border border-slate-200/70 bg-white px-2 py-1 text-ink">
-              <span className="block text-[8.5px] uppercase text-ink-subtle">Clave</span>
-              {credencialesDemo.password}
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="flex items-center justify-center gap-1.5 border-t border-slate-100 pt-3 text-center font-mono text-[10px] text-ink-subtle">
         <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-primary" />
