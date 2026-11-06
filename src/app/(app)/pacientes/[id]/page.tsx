@@ -39,10 +39,11 @@ import { BrandMark } from "@/components/brand/logo";
 import { PacienteDialog } from "@/components/forms/paciente-dialog";
 import { EliminarPacienteButton } from "@/components/forms/eliminar-paciente";
 import { VentaDialog } from "@/components/forms/venta-dialog";
+import { EliminarVentaButton } from "@/components/forms/eliminar-venta";
 import { PagoDialog } from "@/components/forms/pago-dialog";
 import { EntregaControl } from "@/components/forms/entrega-control";
 import { getDataset, getPaciente } from "@/lib/data";
-import { ventaSaldo } from "@/lib/accounting";
+import { ventaPagado, ventaSaldo } from "@/lib/accounting";
 import {
   ESTADO_PAGO_LABEL,
   ESTADO_PAGO_STYLE,
@@ -86,7 +87,7 @@ export default async function PacienteDetallePage({
   const saldo = ventas.reduce((sum, venta) => sum + ventaSaldo(venta), 0);
   const ultimaVisita = ventas[0]?.fecha;
   const pacientesActivos = dataset.pacientes
-    .filter((p) => p.activo)
+    .filter((p) => p.activo || p.id === paciente.id)
     .map((p) => ({ id: p.id, nombres: p.nombres, apellidos: p.apellidos }));
 
   const contacto = [
@@ -271,6 +272,7 @@ export default async function PacienteDetallePage({
                         <TableHead className="text-right">Saldo</TableHead>
                         <TableHead>Estado de pago</TableHead>
                         <TableHead className="pr-5 text-right sm:pr-6">Entrega</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -317,8 +319,34 @@ export default async function PacienteDetallePage({
                                 {ESTADO_PAGO_LABEL[venta.estadoPago as EstadoPago]}
                               </Badge>
                             </TableCell>
-                            <TableCell className="pr-5 text-right sm:pr-6">
+                            <TableCell className="text-right">
                               <EntregaControl ventaId={venta.id} estado={venta.estadoEntrega} />
+                            </TableCell>
+                            <TableCell className="pr-5 text-right sm:pr-6">
+                              <div className="flex items-center justify-end gap-1">
+                                <VentaDialog
+                                  pacientes={pacientesActivos}
+                                  venta={venta}
+                                  trigger={
+                                    <Button
+                                      variant="ghost"
+                                      size="icon-sm"
+                                      title="Editar venta"
+                                      aria-label="Editar venta"
+                                      className="h-8 w-8 rounded-md text-slate-400 transition-colors hover:bg-primary-50 hover:text-primary"
+                                    >
+                                      <Pencil className="h-3.5 w-3.5" />
+                                    </Button>
+                                  }
+                                />
+                                <EliminarVentaButton
+                                  ventaId={venta.id}
+                                  codigo={venta.codigo}
+                                  descripcion={venta.descripcion}
+                                  total={venta.total}
+                                  pagado={ventaPagado(venta)}
+                                />
+                              </div>
                             </TableCell>
                           </TableRow>
                         );

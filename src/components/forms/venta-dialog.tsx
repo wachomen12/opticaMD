@@ -1,8 +1,8 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
-import { CalendarDays, Plus, ReceiptText, Wallet } from "lucide-react";
-import { crearVenta } from "@/app/actions/contabilidad";
+import { useActionState, useEffect, useMemo, useState } from "react";
+import { CalendarDays, Pencil, Plus, ReceiptText, Wallet } from "lucide-react";
+import { actualizarVenta, crearVenta } from "@/app/actions/contabilidad";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +25,13 @@ import {
   CATEGORIA_VENTA_OPTIONS,
 } from "@/lib/constants";
 import { money, toDateInput } from "@/lib/format";
-import type { ActionState, CategoriaVenta, EstadoEntrega, Paciente } from "@/lib/types";
+import type {
+  ActionState,
+  CategoriaVenta,
+  EstadoEntrega,
+  Paciente,
+  Venta,
+} from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type PacienteOption = Pick<Paciente, "id" | "nombres" | "apellidos">;
@@ -34,6 +40,7 @@ const initialState: ActionState = { ok: false };
 
 function VentaForm({
   pacientes,
+  venta,
   defaultPacienteId,
   defaultFecha,
   defaultDescripcion,
@@ -43,6 +50,7 @@ function VentaForm({
   onSuccess,
 }: {
   pacientes: PacienteOption[];
+  venta?: Venta;
   defaultPacienteId?: string;
   defaultFecha?: string;
   defaultDescripcion?: string;
@@ -51,24 +59,33 @@ function VentaForm({
   historiaId?: string;
   onSuccess: () => void;
 }) {
-  const [state, formAction] = useActionState<ActionState, FormData>(crearVenta, initialState);
-  const [total, setTotal] = useState("");
+  const action = useMemo(
+    () => (venta ? actualizarVenta.bind(null, venta.id) : crearVenta),
+    [venta],
+  );
+  const [state, formAction] = useActionState<ActionState, FormData>(action, initialState);
+  const [total, setTotal] = useState(venta ? String(venta.total) : "");
   const [anticipo, setAnticipo] = useState("");
 
   useEffect(() => {
     if (state.ok) onSuccess();
   }, [state.ok, onSuccess]);
 
+  const esEdicion = Boolean(venta);
+  const pagadoPrevio = venta
+    ? venta.pagos.reduce((suma, pago) => suma + pago.monto, 0)
+    : 0;
   const totalNum = Number(total) || 0;
   const anticipoNum = Number(anticipo) || 0;
-  const saldo = Math.max(0, Math.round((totalNum - anticipoNum) * 100) / 100);
+  const pagado = esEdicion ? pagadoPrevio : anticipoNum;
+  const saldo = Math.max(0, Math.round((totalNum - pagado) * 100) / 100);
 
   return (
     <form action={formAction}>
       {historiaId && <input type="hidden" name="historiaId" value={historiaId} />}
       <div className="space-y-5 px-6 pb-5">
         {state.message && !state.ok && (
-          <Alert variant="error" title="No se pudo registrar">
+          <Alert variant="error" title={esEdicion ? "No se pudo guardar" : "No se pudo registrar"}>
             {state.message}
           </Alert>
         )}
@@ -79,12 +96,18 @@ function VentaForm({
               id="fecha"
               type="date"
               name="fecha"
-              defaultValue={defaultFecha ?? toDateInput()}
+              defaultValue={
+                venta ? toDateInput(new Date(venta.fecha)) : defaultFecha ?? toDateInput()
+              }
               required
             />
           </Field>
           <Field label="Categoría" htmlFor="categoria" required error={state.errors?.categoria}>
-            <Select id="categoria" name="categoria" defaultValue={defaultCategoria ?? "LUNAS"}>
+            <Select
+              id="categoria"
+              name="categoria"
+              defaultValue={venta?.categoria ?? defaultCategoria ?? "LUNAS"}
+            >
               {CATEGORIA_VENTA_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -97,7 +120,11 @@ function VentaForm({
         <FormSection title="Cliente" description="Asocia la venta a un paciente o registra un cliente ocasional.">
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Paciente registrado" htmlFor="pacienteId">
-              <Select id="pacienteId" name="pacienteId" defaultValue={defaultPacienteId ?? ""}>
+              <Select
+                id="pacienteId"
+                name="pacienteId"
+                defaultValue={venta?.pacienteId ?? defaultPacienteId ?? ""}
+              >
                 <option value="">Cliente ocasional</option>
                 {pacientes.map((paciente) => (
                   <option key={paciente.id} value={paciente.id}>
@@ -110,6 +137,7 @@ function VentaForm({
               <Input
                 id="clienteNombre"
                 name="clienteNombre"
+                defaultValue={venta?.clienteNombre ?? ""}
                 placeholder="Ej. Sofía Herrera"
                 autoComplete="off"
               />
@@ -126,7 +154,7 @@ function VentaForm({
           <Input
             id="descripcion"
             name="descripcion"
-            defaultValue={defaultDescripcion ?? ""}
+            defaultValue={venta?.descripcion ?? defaultDescripcion ?? ""}
             placeholder="Ej. Lunas progresivas digitales + antirreflejo"
             autoComplete="off"
           />
@@ -147,24 +175,34 @@ function VentaForm({
               required
             />
           </Field>
-          <Field
-            label="Abono / anticipo ($)"
-            htmlFor="anticipo"
-            hint="Opcional"
-            error={state.errors?.anticipo}
-          >
-            <Input
-              id="anticipo"
-              name="anticipo"
-              type="number"
-              min="0"
-              step="0.01"
-              inputMode="decimal"
-              placeholder="0.00"
-              value={anticipo}
-              onChange={(event) => setAnticipo(event.target.value)}
-            />
-          </Field>
+
+          {esEdicion ? (
+            <Field label="Abonado ($)" htmlFor="pagado" hint="Solo lectura">
+              <div className="flex h-10 items-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-[13px] font-semibold tabular-nums text-ink">
+                {money(pagadoPrevio)}
+              </div>
+            </Field>
+          ) : (
+            <Field
+              label="Abono / anticipo ($)"
+              htmlFor="anticipo"
+              hint="Opcional"
+              error={state.errors?.anticipo}
+            >
+              <Input
+                id="anticipo"
+                name="anticipo"
+                type="number"
+                min="0"
+                step="0.01"
+                inputMode="decimal"
+                placeholder="0.00"
+                value={anticipo}
+                onChange={(event) => setAnticipo(event.target.value)}
+              />
+            </Field>
+          )}
+
           <div className="flex flex-col justify-end">
             <div className="flex h-10 items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3">
               <span className="text-[10.5px] font-medium uppercase tracking-wide text-ink-subtle">
@@ -188,10 +226,10 @@ function VentaForm({
             <p className="text-[11px] leading-relaxed text-primary-800">
               {saldo > 0 ? (
                 <>
-                  Se registrará un abono de <strong>{money(anticipoNum)}</strong> y un saldo
-                  pendiente de <strong>{money(saldo)}</strong> en cuentas por cobrar.
+                  {esEdicion ? "Quedará" : "Se registrará"} un saldo pendiente de{" "}
+                  <strong>{money(saldo)}</strong> en cuentas por cobrar.
                 </>
-              ) : anticipoNum > 0 ? (
+              ) : pagado > 0 ? (
                 <>La venta quedará marcada como <strong>pagada</strong>.</>
               ) : (
                 <>Sin abono inicial, la venta quedará como <strong>pendiente de pago</strong>.</>
@@ -210,7 +248,9 @@ function VentaForm({
                       type="radio"
                       name="metodoPago"
                       value={option.value}
-                      defaultChecked={index === 0}
+                      defaultChecked={
+                        venta ? option.value === venta.metodoPago : index === 0
+                      }
                       className="peer sr-only"
                     />
                     <span className="flex h-8 items-center justify-center rounded-lg text-[11px] font-semibold text-ink-muted transition-all peer-checked:bg-white peer-checked:text-primary peer-checked:shadow-sm">
@@ -221,7 +261,11 @@ function VentaForm({
               </div>
             </Field>
             <Field label="Estado de entrega" htmlFor="estadoEntrega">
-              <Select id="estadoEntrega" name="estadoEntrega" defaultValue="ENTREGADO">
+              <Select
+                id="estadoEntrega"
+                name="estadoEntrega"
+                defaultValue={venta?.estadoEntrega ?? "ENTREGADO"}
+              >
                 {(
                   Object.entries(ESTADO_ENTREGA_LABEL) as Array<[EstadoEntrega, string]>
                 ).map(([value, label]) => (
@@ -239,7 +283,7 @@ function VentaForm({
             id="notas"
             name="notas"
             rows={2}
-            defaultValue={defaultNotas ?? ""}
+            defaultValue={venta?.notas ?? defaultNotas ?? ""}
             placeholder="Ej. Enviado al laboratorio, entrega en 5 días hábiles…"
           />
         </Field>
@@ -249,9 +293,12 @@ function VentaForm({
         <Button type="button" variant="outline" onClick={onSuccess}>
           Cancelar
         </Button>
-        <SubmitButton variant="accent" pendingLabel="Registrando venta…">
-          <ReceiptText className="h-4 w-4" />
-          Registrar venta
+        <SubmitButton
+          variant="accent"
+          pendingLabel={esEdicion ? "Guardando cambios…" : "Registrando venta…"}
+        >
+          {esEdicion ? <Pencil className="h-4 w-4" /> : <ReceiptText className="h-4 w-4" />}
+          {esEdicion ? "Guardar cambios" : "Registrar venta"}
         </SubmitButton>
       </DialogFooter>
     </form>
@@ -260,6 +307,7 @@ function VentaForm({
 
 export function VentaDialog({
   pacientes,
+  venta,
   trigger,
   defaultPacienteId,
   defaultFecha,
@@ -269,6 +317,7 @@ export function VentaDialog({
   historiaId,
 }: {
   pacientes: PacienteOption[];
+  venta?: Venta;
   trigger?: React.ReactNode;
   defaultPacienteId?: string;
   defaultFecha?: string;
@@ -278,6 +327,7 @@ export function VentaDialog({
   historiaId?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const esEdicion = Boolean(venta);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -293,16 +343,18 @@ export function VentaDialog({
         <DialogHeader>
           <div className="mb-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-accent">
             <CalendarDays className="h-3.5 w-3.5" />
-            Ingreso
+            {esEdicion ? "Corrección" : "Ingreso"}
           </div>
-          <DialogTitle>Registrar venta</DialogTitle>
+          <DialogTitle>{esEdicion ? "Editar venta" : "Registrar venta"}</DialogTitle>
           <DialogDescription>
-            Lunas, armazones, lentes de contacto, accesorios o consulta optométrica. Admite abonos
-            y saldos pendientes.
+            {esEdicion
+              ? `Modifica los datos del comprobante ${venta?.codigo}. Los pagos ya registrados se conservan.`
+              : "Lunas, armazones, lentes de contacto, accesorios o consulta optométrica. Admite abonos y saldos pendientes."}
           </DialogDescription>
         </DialogHeader>
         <VentaForm
           pacientes={pacientes}
+          venta={venta}
           defaultPacienteId={defaultPacienteId}
           defaultFecha={defaultFecha}
           defaultDescripcion={defaultDescripcion}

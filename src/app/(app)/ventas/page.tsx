@@ -7,9 +7,11 @@ import {
   FlaskConical,
   HandCoins,
   MessageCircle,
+  Pencil,
   Printer,
   Receipt,
   Ticket,
+  Trash2,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { MonthPicker } from "@/components/ui/month-picker";
@@ -28,6 +30,7 @@ import {
   TableWrap,
 } from "@/components/ui/table";
 import { VentaDialog } from "@/components/forms/venta-dialog";
+import { EliminarVentaButton } from "@/components/forms/eliminar-venta";
 import { PagoDialog } from "@/components/forms/pago-dialog";
 import { EntregaControl } from "@/components/forms/entrega-control";
 import { getDataset, getHistoriasVinculadas } from "@/lib/data";
@@ -74,6 +77,13 @@ export default async function VentasPage({
   const pacientesActivos = dataset.pacientes
     .filter((p) => p.activo)
     .map((p) => ({ id: p.id, nombres: p.nombres, apellidos: p.apellidos }));
+  // Para editar una venta hay que poder mantener al paciente original,
+  // aunque su ficha esté archivada.
+  const pacientesParaEdicion = dataset.pacientes.map((p) => ({
+    id: p.id,
+    nombres: p.nombres,
+    apellidos: p.apellidos,
+  }));
 
   const ventas = dataset.ventas.filter((venta) => {
     if (!isInMonth(venta.fecha, mes, anio)) return false;
@@ -345,6 +355,38 @@ export default async function VentasPage({
                                 <BadgeDollarSign className="h-3.5 w-3.5" />
                               </span>
                             )}
+                            <VentaDialog
+                              pacientes={pacientesParaEdicion}
+                              venta={venta}
+                              trigger={
+                                <Button
+                                  variant="outline"
+                                  size="icon-sm"
+                                  title="Editar venta"
+                                  aria-label="Editar venta"
+                                >
+                                  <Pencil className="h-3.5 w-3.5" />
+                                </Button>
+                              }
+                            />
+                            <EliminarVentaButton
+                              ventaId={venta.id}
+                              codigo={venta.codigo}
+                              descripcion={venta.descripcion}
+                              total={venta.total}
+                              pagado={pagado}
+                              trigger={
+                                <Button
+                                  variant="outline"
+                                  size="icon-sm"
+                                  title="Eliminar venta"
+                                  aria-label="Eliminar venta"
+                                  className="text-slate-500 hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              }
+                            />
                           </div>
                         </TableCell>
                       </TableRow>

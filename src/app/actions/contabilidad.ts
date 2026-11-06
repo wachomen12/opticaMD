@@ -157,6 +157,99 @@ export async function crearVenta(
   }
 }
 
+export async function actualizarVenta(
+  ventaId: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  if (!ventaId) return { ok: false, message: "Venta no identificada" };
+
+  const fecha = parseDateInput(getString(formData, "fecha"));
+  const categoriaRaw = getString(formData, "categoria");
+  const descripcion = getString(formData, "descripcion");
+  const total = getNumber(formData, "total");
+  const metodoPagoRaw = getString(formData, "metodoPago");
+  const estadoEntregaRaw = getString(formData, "estadoEntrega") || "ENTREGADO";
+  const pacienteId = getOptional(formData, "pacienteId");
+  const clienteNombre = getOptional(formData, "clienteNombre");
+  const notas = getOptional(formData, "notas");
+
+  const errors: Record<string, string> = {};
+  if (!CATEGORIAS_VENTA.includes(categoriaRaw)) errors.categoria = "Selecciona una categoría";
+  if (!descripcion) errors.descripcion = "Describe el producto o servicio";
+  if (total <= 0) errors.total = "El total debe ser mayor a cero";
+  if (!METODOS.includes(metodoPagoRaw)) errors.metodoPago = "Selecciona un método de pago";
+  if (!ENTREGAS.includes(estadoEntregaRaw)) errors.estadoEntrega = "Estado no válido";
+  if (!pacienteId && !clienteNombre) {
+    errors.clienteNombre = "Indica el paciente o un nombre de referencia";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return { ok: false, message: "Revisa los campos marcados", errors };
+  }
+
+  try {
+    const venta = await prisma.venta.findUnique({
+      where: { id: ventaId },
+      include: { pagos: true },
+    });
+    if (!venta) return { ok: false, message: "La venta ya no existe" };
+
+    const pagado = venta.pagos.reduce((suma, pago) => suma + Number(pago.monto), 0);
+    if (total + 0.01 < pagado) {
+      return {
+        ok: false,
+        message: `El total no puede ser menor a lo ya abonado ($${pagado.toFixed(2)})`,
+        errors: { total: "El total es menor que los pagos registrados" },
+      };
+    }
+
+    const estadoPago =
+      total <= pagado + 0.01 ? "PAGADA" : pagado > 0 ? "PARCIAL" : "PENDIENTE";
+
+    await prisma.venta.update({
+      where: { id: ventaId },
+      data: {
+        fecha,
+        categoria: categoriaRaw as CategoriaVenta,
+        descripcion,
+        total,
+        metodoPago: metodoPagoRaw as MetodoPago,
+        estadoPago,
+        estadoEntrega: estadoEntregaRaw as EstadoEntrega,
+        pacienteId,
+        clienteNombre,
+        notas,
+      },
+    });
+
+    refresh();
+    return { ok: true, message: "Venta actualizada correctamente" };
+  } catch (error) {
+    console.error("[actualizarVenta]", error);
+    return { ok: false, message: "No se pudo actualizar la venta. Intenta nuevamente." };
+  }
+}
+
+export async function eliminarVenta(ventaId: string): Promise<ActionState> {
+  if (!ventaId) return { ok: false, message: "Venta no identificada" };
+
+  try {
+    await prisma.venta.delete({ where: { id: ventaId } });
+    refresh();
+    return { ok: true, message: "Venta eliminada correctamente" };
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return { ok: false, message: "La venta ya no existe" };
+    }
+    console.error("[eliminarVenta]", error);
+    return { ok: false, message: "No se pudo eliminar la venta" };
+  }
+}
+
 export async function registrarPago(
   _prev: ActionState,
   formData: FormData,
