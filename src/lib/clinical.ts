@@ -84,21 +84,29 @@ export const AV_FILAS = [
     label: "Visión lejana (VL) sin corrección",
     od: "avSinCorreccionVL_OD",
     oi: "avSinCorreccionVL_OI",
+    suffix: "LogMAR",
+    placeholder: "0,0",
   },
   {
     label: "Visión lejana (VL) con corrección",
     od: "avConCorreccionVL_OD",
     oi: "avConCorreccionVL_OI",
+    suffix: "LogMAR",
+    placeholder: "0,0",
   },
   {
     label: "Visión próxima (VP) sin corrección",
     od: "avSinCorreccionVP_OD",
     oi: "avSinCorreccionVP_OI",
+    suffix: "M",
+    placeholder: "0,50",
   },
   {
     label: "Visión próxima (VP) con corrección",
     od: "avConCorreccionVP_OD",
     oi: "avConCorreccionVP_OI",
+    suffix: "M",
+    placeholder: "0,50",
   },
 ] as const;
 

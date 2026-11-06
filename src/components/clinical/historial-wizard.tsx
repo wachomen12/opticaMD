@@ -161,6 +161,22 @@ const initialState: ActionState = { ok: false };
 
 const str = (value: string | null | undefined) => value ?? "";
 
+/**
+ * La agudeza visual se guarda con su unidad ("0,0 LogMAR", "0,50 M").
+ * En el input solo se muestra el valor numérico y la unidad va como sufijo fijo.
+ */
+function sinSufijo(valor: string, sufijo: string): string {
+  const texto = valor.trim();
+  if (!texto) return "";
+  const patron = new RegExp(`\\s*${sufijo}$`, "i");
+  return patron.test(texto) ? texto.replace(patron, "").trim() : texto;
+}
+
+function conSufijo(valor: string, sufijo: string): string {
+  const numero = sinSufijo(valor, sufijo);
+  return numero ? `${numero} ${sufijo}` : "";
+}
+
 function inicial(paciente: Paciente, historia: HistoriaClinica | null): FormState {
   return {
     fecha: historia ? toDateInput(historia.fecha) : toDateInput(),
@@ -192,7 +208,8 @@ function inicial(paciente: Paciente, historia: HistoriaClinica | null): FormStat
     avConCorreccionVP_OD: str(historia?.avConCorreccionVP_OD),
     avConCorreccionVP_OI: str(historia?.avConCorreccionVP_OI),
 
-    papilaOptica: str(historia?.papilaOptica),
+    // En una ficha nueva la papila arranca con el prefijo "BORDES ".
+    papilaOptica: historia ? str(historia.papilaOptica) : "BORDES ",
     macula: str(historia?.macula),
     retina: str(historia?.retina),
     observacionesSegmentoPosterior: str(historia?.observacionesSegmentoPosterior),
@@ -783,24 +800,44 @@ export function HistorialWizard({
                             {fila.label}
                           </td>
                           <td className="p-1.5">
-                            <Input
-                              name={fila.od}
-                              value={form[fila.od]}
-                              onChange={(event) => setValue(fila.od, event.target.value)}
-                              placeholder="20/20"
-                              aria-label={`${fila.label} OD`}
-                              className="h-8 text-center font-mono text-[12.5px] font-medium tabular-nums"
-                            />
+                            <div className="relative">
+                              <Input
+                                name={fila.od}
+                                value={sinSufijo(form[fila.od], fila.suffix)}
+                                onChange={(event) =>
+                                  setValue(fila.od, conSufijo(event.target.value, fila.suffix))
+                                }
+                                placeholder={fila.placeholder}
+                                aria-label={`${fila.label} OD`}
+                                className={cn(
+                                  "h-8 text-center font-mono text-[12.5px] font-medium tabular-nums",
+                                  fila.suffix === "LogMAR" ? "pr-14" : "pr-7",
+                                )}
+                              />
+                              <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-[9.5px] font-semibold uppercase tracking-wide text-ink-subtle">
+                                {fila.suffix}
+                              </span>
+                            </div>
                           </td>
                           <td className="p-1.5">
-                            <Input
-                              name={fila.oi}
-                              value={form[fila.oi]}
-                              onChange={(event) => setValue(fila.oi, event.target.value)}
-                              placeholder="20/20"
-                              aria-label={`${fila.label} OI`}
-                              className="h-8 text-center font-mono text-[12.5px] font-medium tabular-nums"
-                            />
+                            <div className="relative">
+                              <Input
+                                name={fila.oi}
+                                value={sinSufijo(form[fila.oi], fila.suffix)}
+                                onChange={(event) =>
+                                  setValue(fila.oi, conSufijo(event.target.value, fila.suffix))
+                                }
+                                placeholder={fila.placeholder}
+                                aria-label={`${fila.label} OI`}
+                                className={cn(
+                                  "h-8 text-center font-mono text-[12.5px] font-medium tabular-nums",
+                                  fila.suffix === "LogMAR" ? "pr-14" : "pr-7",
+                                )}
+                              />
+                              <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-[9.5px] font-semibold uppercase tracking-wide text-ink-subtle">
+                                {fila.suffix}
+                              </span>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -823,7 +860,7 @@ export function HistorialWizard({
                       name="papilaOptica"
                       value={form.papilaOptica}
                       onChange={(event) => setValue("papilaOptica", event.target.value)}
-                      placeholder="Bordes definidos / Normal"
+                      placeholder="Definidos / Normal"
                     />
                   </Field>
                   <Field label="Mácula" htmlFor="macula">
