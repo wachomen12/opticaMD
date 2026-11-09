@@ -16,6 +16,7 @@ import {
   TableWrap,
 } from "@/components/ui/table";
 import { GastoDialog } from "@/components/forms/gasto-dialog";
+import { EliminarEgresoButton } from "@/components/forms/eliminar-egreso";
 import { ExpenseBreakdown } from "@/components/dashboard/expense-breakdown";
 import { getDataset } from "@/lib/data";
 import { getDashboardData } from "@/lib/accounting";
@@ -135,6 +136,7 @@ export default async function GastosPage({
                       <TableHead>Categoría</TableHead>
                       <TableHead>Tipo</TableHead>
                       <TableHead className="pr-5 text-right sm:pr-6">Monto</TableHead>
+                      <TableHead className="w-12 pr-5 sm:pr-6" />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -170,6 +172,15 @@ export default async function GastosPage({
                           <span className="whitespace-nowrap text-[12.5px] font-semibold tabular-nums text-ink">
                             {money(gasto.monto)}
                           </span>
+                        </TableCell>
+                        <TableCell className="pr-5 text-right sm:pr-6">
+                          <EliminarEgresoButton
+                            tipo="GASTO"
+                            id={gasto.id}
+                            titulo={gasto.descripcion}
+                            monto={gasto.monto}
+                            meta={`${CATEGORIA_GASTO_LABEL[gasto.categoria as CategoriaGasto]}${gasto.comprobante ? ` · ${gasto.comprobante}` : ""}`}
+                          />
                         </TableCell>
                       </TableRow>
                     ))}

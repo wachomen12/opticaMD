@@ -311,6 +311,11 @@ export default async function ReportesPage({
             período seleccionado.
           </li>
           <li>
+            • Compras y gastos son egresos independientes de las ventas: eliminar una venta no
+            borra automáticamente esos registros. Para depurarlos, usa el botón de eliminar en sus
+            módulos.
+          </li>
+          <li>
             • Documento generado automáticamente por el sistema de gestión de ÓPTICA MD.
           </li>
         </ul>

@@ -24,6 +24,7 @@ import {
   TableWrap,
 } from "@/components/ui/table";
 import { CompraDialog } from "@/components/forms/compra-dialog";
+import { EliminarEgresoButton } from "@/components/forms/eliminar-egreso";
 import { getDataset } from "@/lib/data";
 import {
   CATEGORIA_COMPRA_LABEL,
@@ -146,6 +147,7 @@ export default async function ComprasPage({
                     <TableHead>Categoría</TableHead>
                     <TableHead>Detalle</TableHead>
                     <TableHead className="pr-5 text-right sm:pr-6">Total</TableHead>
+                    <TableHead className="w-12 pr-5 sm:pr-6" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -181,6 +183,16 @@ export default async function ComprasPage({
                         <span className="whitespace-nowrap text-[12.5px] font-semibold tabular-nums text-ink">
                           {money(compra.total)}
                         </span>
+                      </TableCell>
+                      <TableCell className="pr-5 text-right sm:pr-6">
+                        <EliminarEgresoButton
+                          tipo="COMPRA"
+                          id={compra.id}
+                          titulo={compra.proveedor}
+                          detalle={compra.descripcion}
+                          monto={compra.total}
+                          meta={`${CATEGORIA_COMPRA_LABEL[compra.categoria as CategoriaCompra]}${compra.numeroComprobante ? ` · ${compra.numeroComprobante}` : ""}`}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}

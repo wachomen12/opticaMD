@@ -411,3 +411,45 @@ export async function crearGasto(
     return { ok: false, message: "No se pudo registrar el gasto" };
   }
 }
+
+// ─────────────────────────────────────────────────────────────
+//  ELIMINACIÓN DE EGRESOS
+// ─────────────────────────────────────────────────────────────
+
+export async function eliminarCompra(compraId: string): Promise<ActionState> {
+  if (!compraId) return { ok: false, message: "Compra no identificada" };
+
+  try {
+    await prisma.compra.delete({ where: { id: compraId } });
+    refresh();
+    return { ok: true, message: "Compra eliminada correctamente" };
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return { ok: false, message: "La compra ya no existe" };
+    }
+    console.error("[eliminarCompra]", error);
+    return { ok: false, message: "No se pudo eliminar la compra" };
+  }
+}
+
+export async function eliminarGasto(gastoId: string): Promise<ActionState> {
+  if (!gastoId) return { ok: false, message: "Gasto no identificado" };
+
+  try {
+    await prisma.gasto.delete({ where: { id: gastoId } });
+    refresh();
+    return { ok: true, message: "Gasto eliminado correctamente" };
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2025"
+    ) {
+      return { ok: false, message: "El gasto ya no existe" };
+    }
+    console.error("[eliminarGasto]", error);
+    return { ok: false, message: "No se pudo eliminar el gasto" };
+  }
+}
