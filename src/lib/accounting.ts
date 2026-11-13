@@ -277,7 +277,7 @@ export function getDashboardData(
     movimientos: getMovimientos(dataset, mes, anio),
     porCobrarTotal: Math.round(porCobrarTotal * 100) / 100,
     saldoAFavor: 0,
-    enTaller: dataset.ventas.filter((v) => v.estadoEntrega !== "ENTREGADO").length,
+    enTaller: dataset.ventas.filter((v) => v.estadoEntrega === "EN_TALLER").length,
     clientesActivos: dataset.pacientes.filter((p) => p.activo).length,
     comprasPendientes: 0,
   };

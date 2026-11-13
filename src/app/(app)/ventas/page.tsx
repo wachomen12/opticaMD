@@ -44,6 +44,7 @@ import {
   CATEGORIA_VENTA_DOT,
   CATEGORIA_VENTA_LABEL,
   CATEGORIA_VENTA_OPTIONS,
+  ESTADO_ENTREGA_LABEL,
   ESTADO_PAGO_LABEL,
   ESTADO_PAGO_STYLE,
 } from "@/lib/constants";
@@ -56,13 +57,21 @@ export const metadata: Metadata = { title: "Ventas" };
 export default async function VentasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ mes?: string; q?: string; categoria?: string; estado?: string }>;
+  searchParams: Promise<{
+    mes?: string;
+    q?: string;
+    categoria?: string;
+    estado?: string;
+    entrega?: string;
+  }>;
 }) {
   const params = await searchParams;
   const { mes, anio } = parseMonthParam(params.mes);
   const q = (params.q ?? "").trim().toLowerCase();
   const categoria = params.categoria ?? "TODAS";
   const estado = params.estado ?? "TODAS";
+  // El botón "En taller" del header navega con ?entrega=EN_TALLER.
+  const entrega = params.entrega ?? "TODAS";
   const mesParam = `${anio}-${String(mes + 1).padStart(2, "0")}`;
 
   const dataset = await getDataset();
@@ -89,6 +98,7 @@ export default async function VentasPage({
     if (!isInMonth(venta.fecha, mes, anio)) return false;
     if (categoria !== "TODAS" && venta.categoria !== categoria) return false;
     if (estado !== "TODAS" && venta.estadoPago !== estado) return false;
+    if (entrega !== "TODAS" && venta.estadoEntrega !== entrega) return false;
     if (!q) return true;
     const paciente = venta.pacienteId ? pacientes.get(venta.pacienteId) : undefined;
     const cliente = paciente
@@ -161,6 +171,7 @@ export default async function VentasPage({
           q={params.q}
           categoria={categoria}
           estado={estado}
+          entrega={entrega}
           mes={mesParam}
           categories={CATEGORIA_VENTA_OPTIONS}
           estadoOptions={[
@@ -168,9 +179,13 @@ export default async function VentasPage({
             { value: "PARCIAL", label: "Abonado" },
             { value: "PAGADA", label: "Pagada" },
           ]}
+          entregaOptions={(
+            Object.entries(ESTADO_ENTREGA_LABEL) as Array<[string, string]>
+          ).map(([value, label]) => ({ value, label }))}
           placeholder="Buscar por cliente, comprobante o detalle…"
           categoriaLabel="Todas las categorías"
-          estadoLabel="Todos los estados"
+          estadoLabel="Todos los estados de pago"
+          entregaLabel="Todos los estados de entrega"
         />
       </div>
 

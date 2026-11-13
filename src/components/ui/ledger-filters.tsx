@@ -12,25 +12,34 @@ export function LedgerFilters({
   categoria,
   mes,
   estado,
+  entrega,
   categories,
   estadoOptions,
+  entregaOptions,
   placeholder = "Buscar…",
   categoriaLabel = "Todas las categorías",
   estadoLabel = "Todos los estados",
+  entregaLabel = "Todos los estados de entrega",
 }: {
   basePath: string;
   q?: string;
   categoria?: string;
   mes?: string;
   estado?: string;
+  entrega?: string;
   categories: FilterOption[];
   estadoOptions?: FilterOption[];
+  entregaOptions?: FilterOption[];
   placeholder?: string;
   categoriaLabel?: string;
   estadoLabel?: string;
+  entregaLabel?: string;
 }) {
   const hasFilters =
-    Boolean(q) || (categoria && categoria !== "TODAS") || (estado && estado !== "TODAS");
+    Boolean(q) ||
+    (categoria && categoria !== "TODAS") ||
+    (estado && estado !== "TODAS") ||
+    (entrega && entrega !== "TODAS");
 
   const cleanHref = `${basePath}${mes ? `?mes=${mes}` : ""}`;
 
@@ -47,6 +56,9 @@ export function LedgerFilters({
           <input type="hidden" name="categoria" value={categoria} />
         )}
         {estado && estado !== "TODAS" && <input type="hidden" name="estado" value={estado} />}
+        {entrega && entrega !== "TODAS" && (
+          <input type="hidden" name="entrega" value={entrega} />
+        )}
         <Search className="pointer-events-none absolute left-3 h-3.5 w-3.5 text-slate-400" />
         <input
           type="search"
@@ -73,6 +85,9 @@ export function LedgerFilters({
           {mes && <input type="hidden" name="mes" value={mes} />}
           {q && <input type="hidden" name="q" value={q} />}
           {estado && estado !== "TODAS" && <input type="hidden" name="estado" value={estado} />}
+          {entrega && entrega !== "TODAS" && (
+            <input type="hidden" name="entrega" value={entrega} />
+          )}
           <Select
             name="categoria"
             defaultValue={categoria ?? "TODAS"}
@@ -101,6 +116,9 @@ export function LedgerFilters({
             {categoria && categoria !== "TODAS" && (
               <input type="hidden" name="categoria" value={categoria} />
             )}
+            {entrega && entrega !== "TODAS" && (
+              <input type="hidden" name="entrega" value={entrega} />
+            )}
             <Select
               name="estado"
               defaultValue={estado ?? "TODAS"}
@@ -110,6 +128,33 @@ export function LedgerFilters({
             >
               <option value="TODAS">{estadoLabel}</option>
               {estadoOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+          </form>
+        )}
+
+        {entregaOptions && entregaOptions.length > 0 && (
+          <form action={basePath} method="get" className="min-w-0 flex-1 sm:w-[190px] sm:flex-none">
+            {mes && <input type="hidden" name="mes" value={mes} />}
+            {q && <input type="hidden" name="q" value={q} />}
+            {categoria && categoria !== "TODAS" && (
+              <input type="hidden" name="categoria" value={categoria} />
+            )}
+            {estado && estado !== "TODAS" && (
+              <input type="hidden" name="estado" value={estado} />
+            )}
+            <Select
+              name="entrega"
+              defaultValue={entrega ?? "TODAS"}
+              aria-label={entregaLabel}
+              onChange={(event) => event.currentTarget.form?.requestSubmit()}
+              className="h-10 text-[12.5px]"
+            >
+              <option value="TODAS">{entregaLabel}</option>
+              {entregaOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>

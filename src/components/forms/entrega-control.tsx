@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { actualizarEntrega } from "@/app/actions/contabilidad";
 import { ESTADO_ENTREGA_LABEL, ESTADO_ENTREGA_STYLE } from "@/lib/constants";
@@ -17,6 +18,7 @@ export function EntregaControl({
   const [value, setValue] = useState<EstadoEntrega>(estado);
   const [pending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
+  const router = useRouter();
 
   function update(next: EstadoEntrega) {
     const previous = value;
@@ -29,6 +31,9 @@ export function EntregaControl({
         return;
       }
       setSaved(true);
+      // Refresca el árbol de Server Components para que el contador
+      // "En taller" del header/sidebar cambie al instante.
+      router.refresh();
       setTimeout(() => setSaved(false), 1400);
     });
   }

@@ -8,7 +8,9 @@ export const dynamic = "force-dynamic";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const dataset = await getDataset();
-  const enTaller = dataset.ventas.filter((v) => v.estadoEntrega !== "ENTREGADO").length;
+  // Solo las órdenes que siguen físicamente en el taller. "LISTO" y
+  // "ENTREGADO" ya no cuentan como trabajo pendiente.
+  const enTaller = dataset.ventas.filter((v) => v.estadoEntrega === "EN_TALLER").length;
   const pacientes = dataset.pacientes.filter((p) => p.activo).length;
   const hoy = new Date();
   const todayLabel = `${MESES[hoy.getMonth()]} ${hoy.getFullYear()}`;

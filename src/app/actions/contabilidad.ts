@@ -41,6 +41,9 @@ const METODOS = ["EFECTIVO", "TRANSFERENCIA", "TARJETA"];
 const ENTREGAS = ["EN_TALLER", "LISTO", "ENTREGADO"];
 
 function refresh() {
+  // El layout contiene los contadores globales del header/sidebar
+  // (por ejemplo "En taller"). Revalidarlo mantiene esos números al día.
+  revalidatePath("/", "layout");
   revalidatePath("/dashboard");
   revalidatePath("/ventas");
   revalidatePath("/compras");
